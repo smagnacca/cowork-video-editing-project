@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-03-31 — Avatar Off-Screen Bug Fix + Fixed Final Video (v3)
+
+### Bug Fixed
+**Root cause:** `objectFit: 'cover'` and `objectPosition: 'center'` on `<OffthreadVideo>` are silently ignored by Remotion's headless Chrome renderer. The video renders at its native 1920×1080 resolution and overflows its container, pushing Scott's avatar completely off the right edge of the frame.
+
+**Fix applied to:** `IntroScene.tsx` and `OutroScene.tsx`
+- **Before (broken):** `<OffthreadVideo style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />`
+- **After (correct):** `<OffthreadVideo style={{ position: 'absolute', right: 0, top: 0, width: 1920, height: 1080 }} />` — full resolution, anchored right, clipped by `overflow: hidden` on the 960px parent container. Shows the right-half of the HeyGen frame where Scott is framed.
+
+### Critical Rule Added to CLAUDE.md
+Rule 1b: **NEVER use objectFit/objectPosition on OffthreadVideo** — always use explicit pixel dimensions.
+
+### Outputs
+- `assets/intro-outro/intro-rendered.mp4` — re-rendered (6.7MB) ✅
+- `assets/intro-outro/outro-rendered.mp4` — re-rendered (7.7MB) ✅
+- `output/3-types-of-people-final-v3.mp4` — **43MB, 4:05** — fixed final with avatar properly visible ✅
+
+### Layout Architecture (corrected standard — apply to ALL future videos)
+- Avatar: right 960px panel, `width: 1920, height: 1080, position: absolute, right: 0, top: 0`, parent `overflow: hidden` — **NO objectFit**
+- Content: left 960px panel, absolutely positioned phases that crossfade with `phaseOpacity()` helper
+- Feather gradient: 120px on left edge of avatar panel, blends avatar into left content panel
+- Background: solid #0a0e1a matches HeyGen avatar BG — no seam visible
+
+---
+
 ## 2026-03-31 — Whisper-Timed Left-Panel Animations + Split Avatar Layout (v2)
 
 ### Final Output
@@ -22,7 +47,7 @@ Scott actually said MORE than the script — captured by Whisper (includes "free
 - **Phase 4 (f229–end):** AI quiz card — styled Remotion recreation of scottmagnacca.com quiz, TypewriterText URL. Card matches brand (navy bg, blue border glow, answer options A–D)
 
 ### Layout Architecture (new standard for all future videos)
-- Avatar: right 960px panel, `objectFit: 'cover'`, feathered left edge gradient blends into left panel
+- Avatar: right 960px panel, explicit `width:1920 height:1080` anchored right (see v3 bugfix — `objectFit` is not used), feathered left edge gradient blends into left panel
 - Content: left 960px panel, absolutely positioned phases that crossfade with `phaseOpacity()` helper
 - Vertical separator: subtle `${accentColor}30` gradient line at x=952
 - Background: solid #0a0e1a matches HeyGen avatar BG — no seam visible
