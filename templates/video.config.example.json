@@ -40,9 +40,21 @@
   },
 
   "ctaUrl": "scottmagnacca.com",
-  "ctaTagline": "Build the skills that make you impossible to ignore",
+  "ctaTagline": "Discover your AI leadership edge",
 
   "scenes": [
+    {
+      "type": "intro",
+      "avatarSrc": "avatar/intro-avatar.mp4",
+      "hookText": "YOUR EDGE ISN'T WHAT YOU THINK",
+      "hookColor": "accent2",
+      "topicTitle": "3 Attitudes That Define AI Leaders",
+      "topicSubtitle": "Curiosity · Learning · Adaptability",
+      "speakerName": "Scott Magnacca",
+      "speakerTitle": "AI & Leadership Strategist",
+      "accentColor": "accent1",
+      "timing": { "startFrame": 0, "endFrame": 728 }
+    },
     {
       "type": "hook",
       "title": "3 Types of People",
@@ -148,7 +160,22 @@
       "holdFrames": 150,
       "timing": {
         "startFrame": 5535,
-        "endFrame": 5953
+        "endFrame": 5700
+      }
+    },
+    {
+      "type": "outro",
+      "avatarSrc": "avatar/outro-avatar.mp4",
+      "ctaHeadline": "Take the 60-Second Quiz",
+      "ctaDescription": "Discover your AI leadership style",
+      "ctaButtonText": "START THE QUIZ",
+      "accentColor": "accent2",
+      "kineticText": "YOUR CIRCLE IS YOUR CATALYST",
+      "kineticColor": "accent1",
+      "speakerName": "Scott Magnacca",
+      "timing": {
+        "startFrame": 5700,
+        "endFrame": 6362
       }
     }
   ]

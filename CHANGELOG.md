@@ -1,5 +1,74 @@
 # Changelog
 
+## 2026-03-31 — Avatar Intro/Outro Spliced into First Complete Video
+
+### Final Output
+- `output/3-types-of-people-final.mp4` — 42MB, **4:05 total** (was 3:18)
+- Structure: Intro (0:24) → Main Content (3:18) → Outro (0:22)
+
+### HeyGen Avatar Files
+- Recorded on HeyGen Creator plan, background #0a0e1a (navy match)
+- `public/avatar/intro-avatar.mp4` — 24.28s (728 frames) — Scott's generic branded intro
+- `public/avatar/outro-avatar.mp4` — 22.06s (662 frames) — Scott's generic CTA outro
+- Files are reusable across ALL future videos (Option A — record once, reuse forever)
+
+### Intro Script (evergreen — works for any video)
+> "Hi, I'm Scott Magnacca, co-founder of Salesforlife.ai. It's taken me 25 years at the executive level in financial services to fully understand — and use — what I'm about to share with you. We're going to compress those 25 years into just a few minutes. What I'm about to share has the potential to change the way you work, lead, and grow in the next 12 months and beyond. Let's get into it."
+
+### Outro Script (evergreen — update "three powerful ideas" count per video if desired)
+> "So we just discussed three powerful ideas — concepts that can radically shift your career trajectory, if you use them. If this landed for you, take the 60-second quiz at scottmagnacca.com. I'll see you in the next one."
+
+### Components Built This Session
+- `LowerThird.tsx` — Speaker name/title with staggered spring entrance from left
+- `IntroScene.tsx` — 3-phase MasterClass-style intro (hook text → authority → topic reveal)
+- `OutroScene.tsx` — Seamless CTA outro (animated card, bouncing arrow, TypewriterText URL)
+- `avatarSrc` prop wired into both: `<OffthreadVideo>` replaces animated bg when avatar provided
+- Root.tsx updated: `IntroSceneComp` (728f) + `OutroSceneComp` (662f) as standalone compositions
+
+### Render Pipeline
+- Intro/Outro rendered as standalone Remotion compositions → ffmpeg concat with main video
+- Render path: rsync to /tmp/ (exclude node_modules, symlink) → render → concat
+- No EPERM issues at /Users/ path (only affects /mnt/ mounts)
+
+### Per-Video Workflow (going forward)
+1. Write content script → orchestrate → render main video
+2. Update intro config (hookText, topicTitle) — 2 fields only
+3. ffmpeg concat: intro-rendered + main + outro-rendered → final MP4
+4. Avatar MP4s never change — only the text overlays update per video
+
+---
+
+## 2026-03-31 — Intro/Outro Scene System + HeyGen Avatar Integration Design
+
+### New Components
+- **`LowerThird.tsx`** — Reusable speaker name/title lower-third graphic. Accent line + staggered spring entrance from left. Configurable delay, duration, colors. Auto-fades on exit.
+- **`IntroScene.tsx`** — MasterClass-style 3-phase intro scene:
+  - Phase 1 (0–3s): Hook text slams in (scale 0.7→1, gold glow, ALL CAPS), continuous subtle zoom for forward momentum
+  - Phase 2 (3–8s): LowerThird enters at 5s; gold flash pattern interrupt at 3s re-engages attention
+  - Phase 3 (8–10s): Hook fades, topic title + subtitle spring in, LiquidReveal transition fires
+- **`OutroScene.tsx`** — Seamless CTA outro (no "wrap-up" feel):
+  - Bottom accent line draws left→right over 60 frames (visual funnel)
+  - CTA GlassmorphismCard slides from right at 2s; bouncing arrow enters at 3s
+  - CTA button pulses on sine wave; URL types in via TypewriterText
+  - Kinetic text reinforcement on left half; gentle overall fade last 30 frames
+
+### TemplateVideo.tsx Updates
+- Added `'intro' | 'outro'` to `SceneConfig.type` union
+- Added optional fields to `SceneConfig`: `hookText`, `hookColor`, `topicTitle`, `topicSubtitle`, `speakerName`, `speakerTitle`, `ctaHeadline`, `ctaDescription`, `ctaButtonText`
+- Added `IntroScene` and `OutroScene` cases to `SceneRenderer`
+
+### Config Schema
+- `templates/video.config.example.json` updated with intro scene (first) and outro scene (last)
+- `ctaTagline` updated to "Discover your AI leadership edge"
+
+### HeyGen Avatar Integration Design
+- Researched Creator plan capabilities for avatar delivery of intro/outro
+- Best practice: set HeyGen background to `#0a0e1a` (exact navy match) → no transparent WebM needed
+- Avatar MP4 goes to `remotion-project/public/avatar/`, loaded via `<OffthreadVideo>` in IntroScene/OutroScene
+- `avatarSrc` prop pattern designed for future implementation
+
+---
+
 ## 2026-03-31 (v5.1) — CTA Closing Fix
 - Replaced spoken name/URL in CTA with: "Visit me at my personal website below to learn how you can master and apply these skills today"
 - URL still displayed visually (`scottmagnacca.com`) — only the spoken narration changed

@@ -17,6 +17,8 @@ import { NoiseOverlay, DynamicHueShift } from './components/NoiseOverlay';
 import { LiquidReveal, CrossfadeTransition } from './components/SceneTransition';
 import { TypewriterText } from './components/TypewriterText';
 import { MarkerHighlight } from './components/MarkerHighlight';
+import { IntroScene } from './components/IntroScene';
+import { OutroScene } from './components/OutroScene';
 
 // ─── Types ──────────────────────────────────────────────────────
 interface VideoColors {
@@ -54,7 +56,7 @@ interface KineticSequenceItem {
 }
 
 interface SceneConfig {
-  type: 'hook' | 'archetype' | 'bridge' | 'cta' | 'montage' | 'quote';
+  type: 'hook' | 'archetype' | 'bridge' | 'cta' | 'montage' | 'quote' | 'intro' | 'outro';
   title?: string;
   titleLine2?: string;
   subtitle?: string;
@@ -71,6 +73,19 @@ interface SceneConfig {
   narration?: string;
   markerPhrase?: string | null;
   holdFrames?: number;
+  // Intro scene fields
+  hookText?: string;
+  hookColor?: string;
+  topicTitle?: string;
+  topicSubtitle?: string;
+  speakerName?: string;
+  speakerTitle?: string;
+  // Outro scene fields
+  ctaHeadline?: string;
+  ctaDescription?: string;
+  ctaButtonText?: string;
+  // Avatar (HeyGen) — path relative to public/, e.g. "avatar/intro-avatar.mp4"
+  avatarSrc?: string;
   timing: {
     startFrame: number;
     endFrame: number;
@@ -543,6 +558,8 @@ const SceneRenderer: React.FC<{
     case 'archetype': return <ArchetypeSceneTemplate scene={props.scene} colors={props.colors} effects={props.effects} />;
     case 'bridge': return <BridgeScene scene={props.scene} colors={props.colors} effects={props.effects} />;
     case 'cta': return <CTAScene scene={props.scene} colors={props.colors} effects={props.effects} ctaUrl={props.ctaUrl} ctaTagline={props.ctaTagline} />;
+    case 'intro': return <IntroScene scene={props.scene} colors={props.colors} effects={props.effects} />;
+    case 'outro': return <OutroScene scene={props.scene} colors={props.colors} effects={props.effects} ctaUrl={props.ctaUrl} ctaTagline={props.ctaTagline} />;
     default: return <HookScene scene={props.scene} colors={props.colors} effects={props.effects} />;
   }
 };

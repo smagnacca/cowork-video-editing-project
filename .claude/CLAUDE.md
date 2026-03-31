@@ -15,9 +15,11 @@ When Scott starts a new chat in this folder, greet him with the following prompt
 - **New visual effects** (from Persuasion & Conversion Toolkit): LiquidReveal transitions, TypewriterText, MarkerHighlight, NoiseOverlay, DynamicHueShift
 - B-roll side-by-side layout with card-shift animation
 - Full render pipeline: script → TTS audio → Whisper timestamps → config → Remotion render → MP4
+- **Branded Intro/Outro System** — HeyGen avatar recorded once, reused on every video via ffmpeg concat
+- **IntroScene, OutroScene, LowerThird** components built and registered in Root.tsx
 
 **Completed videos:**
-- "3 Types of People You Need in Your Corner" (3:18, 5953 frames, 30fps, 1920x1080)
+- "3 Types of People You Need in Your Corner" — FINAL: `output/3-types-of-people-final.mp4` (4:05, with intro/outro)
 
 **Key file locations:**
 - Workspace (Cowork): this folder
@@ -25,7 +27,8 @@ When Scott starts a new chat in this folder, greet him with the following prompt
 - **Orchestrator**: `scripts/orchestrate.py` — runs the full pipeline from a script markdown
 - Config-driven composition: `remotion-project/src/TemplateVideo.tsx` (new — reads JSON config)
 - Original composition: `remotion-project/src/ThreeTypesVideo.tsx` (hardcoded for reference)
-- Reusable components: `remotion-project/src/components/` (ParticleField, KineticText, GlassmorphismCard, BRollPlayer, MeshGradient, SceneTransition, TypewriterText, MarkerHighlight, NoiseOverlay)
+- Reusable components: `remotion-project/src/components/` (ParticleField, KineticText, GlassmorphismCard, BRollPlayer, MeshGradient, SceneTransition, TypewriterText, MarkerHighlight, NoiseOverlay, **LowerThird, IntroScene, OutroScene**)
+- **Avatar files**: `remotion-project/public/avatar/intro-avatar.mp4` (728f) + `outro-avatar.mp4` (662f)
 - Remotion entry: `remotion-project/remotion/Root.tsx` + `remotion-project/remotion/index.ts`
 - Scripts: `scripts/` (orchestrate.py, generate_tts.py, whisper_timestamps.py)
 - Audio: `audio/`
@@ -43,13 +46,14 @@ When Scott starts a new chat in this folder, greet him with the following prompt
 - **Workflow:** Scott describes a video → Claude writes the script with scene breakdown → generates voiceover → **auto-curates B-roll from YouTube** → builds/updates Remotion composition → renders final MP4
 - **B-roll:** When creating any video, automatically search YouTube for short, clean stock footage clips that support each scene's narration. Download, trim (6s, no audio, h264), and place at Whisper-timed cue points. See `.claude/skills/broll-curation/SKILL.md`
 
-**To create a new video, just describe it.** The pipeline handles everything:
-1. Write a script in the standardized format (see `templates/SCRIPT-FORMAT.md`)
-2. Run the orchestrator: `python3 scripts/orchestrate.py scripts/my-video.md --render`
-3. Or just tell Claude what video you want — it will write the script, generate audio, set timings, and render.
+**To create a new video, just describe it.** The full pipeline (including intro/outro splice) runs automatically:
+1. Write script in standardized format → run orchestrator → render main content
+2. Update `hookText` + `topicTitle` in Root.tsx IntroComposition (2 fields)
+3. Render IntroSceneComp + OutroSceneComp → ffmpeg concat all three → `[name]-final.mp4`
+4. **ALWAYS deliver the `-final.mp4`** (intro + content + outro), never the raw content-only render
 
 **What would you like to work on today?**
-- Create a new video (concept → script → voiceover → animated MP4)
+- **Create a new video** (concept → script → voiceover → animated MP4 + branded intro/outro)
 - Upgrade the composition templates (new scene types, visual styles)
 - Extend the pipeline (captions, music bed, batch rendering, logo overlay)
 - Something else
@@ -137,6 +141,40 @@ For every new video project:
 - Config defines: scenes (type, timing, colors, B-roll, kinetic text), effects, colors, CTA
 - Scene timings are set from Whisper word-level timestamps (not guessed)
 - B-roll auto-starts at 45% through archetype scenes, kinetic text at 80%
+
+## Intro/Outro Best Practices
+
+### HeyGen Avatar — Color-Match Technique
+- Scott uses HeyGen Creator plan (no transparent export). Set BG to `#0a0e1a` — exact navy match.
+- `<OffthreadVideo>` in Remotion plays avatar video; animations layer on top. No alpha channel needed.
+- Avatar files live at `remotion-project/public/avatar/`. **Never move or rename these.**
+
+### IntroScene Text Overlays (per-video, 2 fields only)
+- `hookText` — 3-6 word ALL CAPS attention hook (e.g. "YOUR EDGE ISN'T WHAT YOU THINK")
+- `topicTitle` — full video title (e.g. "3 Types of People You Need in Your Corner")
+- `topicSubtitle` — optional subtitle dots (e.g. "Curiosity · Learning · Adaptability")
+- These update in `Root.tsx` IntroComposition. Avatar speech is generic — it never changes.
+
+### Render + Concat Pattern
+```bash
+# Always rsync (not cp -r) to /tmp/ — faster, skips node_modules
+rsync -a --exclude='node_modules' --exclude='out' remotion-project/ /tmp/remotion-render/
+ln -s "$(pwd)/remotion-project/node_modules" /tmp/remotion-render/node_modules
+
+# Render intro + outro
+cd /tmp/remotion-render
+npx remotion render remotion/index.ts IntroSceneComp /tmp/intro-rendered.mp4 --concurrency=2
+npx remotion render remotion/index.ts OutroSceneComp /tmp/outro-rendered.mp4 --concurrency=2
+
+# Concat
+ffmpeg -y -i /tmp/intro-rendered.mp4 -i output/VIDEO.mp4 -i /tmp/outro-rendered.mp4 \
+  -filter_complex "[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[v][a]" \
+  -map "[v]" -map "[a]" -c:v libx264 -c:a aac -crf 18 -preset fast output/VIDEO-final.mp4
+```
+
+### No EPERM at /Users/ Path
+- EPERM only affects `/mnt/` Cowork workspace mounts. `/Users/scottmagnacca/` is safe for rendering.
+- Still use /tmp/ for cleanliness and to keep output/ folder clean during render.
 
 ## Project Technical Notes
 
