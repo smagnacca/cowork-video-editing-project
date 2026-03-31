@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew list:*)",
+      "Bash(python3 -c \"from pydub import AudioSegment; a = AudioSegment.from_mp3\\(''''$HOME/Documents/Claude/Projects/Cowork-video-editing project/audio/3-types-of-people.mp3''''\\); print\\(f''''Duration: {len\\(a\\)/1000:.2f}s''''\\)\")",
+      "Bash(brew install:*)",
+      "Bash(pip3 install:*)",
+      "WebFetch(domain:www.youtube.com)",
+      "WebFetch(domain:noembed.com)",
+      "Bash(python3:*)",
+      "Bash(find /Users/scottmagnacca/Documents/Claude/Projects/Cowork-video-editing project/.claude -name *visual* -o -name *SKILL.md)",
+      "Bash(xargs ls:*)",
+      "Bash(yt-dlp -f \"bestvideo[ext=mp4][height<=1080]\" -o \"bet-on-you-raw.%\\(ext\\)s\" \"https://youtu.be/6U8ipxSRAUA\")",
+      "Bash(yt-dlp -f \"bestvideo[ext=mp4][height<=1080]\" -o \"front-row-raw.%\\(ext\\)s\" \"https://youtube.com/shorts/ruuVYMKecqM\")",
+      "Bash(ffmpeg -y -i bet-on-you-raw.mp4 -t 6 -an -c:v libx264 -pix_fmt yuv420p bet-on-you.mp4)",
+      "Bash(ffmpeg -y -i front-row-raw.mp4 -t 6 -an -c:v libx264 -pix_fmt yuv420p front-row.mp4)",
+      "Bash(npx remotion:*)",
+      "Bash(ffmpeg -y -i out/3-types-of-people.mp4 -vf \"select=''''eq\\(n\\\\,100\\)+eq\\(n\\\\,340\\)+eq\\(n\\\\,852\\)+eq\\(n\\\\,1188\\)+eq\\(n\\\\,1400\\)''''\" -vsync vfr out/edit_%04d.png)",
+      "WebSearch",
+      "Bash(yt-dlp -f \"bestvideo[ext=mp4][height<=1080]\" --no-audio -o \"remotion-project/public/broll/texting-raw.mp4\" \"https://www.pexels.com/video/close-up-shot-of-a-person-texting-9902439/\")",
+      "Bash(yt-dlp -f \"best[ext=mp4]\" -o \"remotion-project/public/broll/texting-raw.mp4\" \"https://www.pexels.com/video/close-up-shot-of-a-person-texting-9902439/\" --extractor-args \"generic:impersonate\")",
+      "Bash(yt-dlp --flat-playlist -j \"ytsearch5:person texting phone close up stock footage free\")",
+      "Bash(yt-dlp -f \"bestvideo[ext=mp4][height<=1080]\" -o \"remotion-project/public/broll/texting-raw.mp4\" \"https://youtube.com/watch?v=MIyGxcOuuyQ\")",
+      "Bash(ffmpeg -y -i remotion-project/public/broll/texting-raw.mp4 -ss 2 -t 6 -an -c:v libx264 -pix_fmt yuv420p remotion-project/public/broll/texting.mp4)",
+      "Bash(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 remotion-project/public/broll/texting.mp4)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Bash(ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,duration,nb_frames -of default=noprint_wrappers=1 \"$f\")",
+      "Bash(done)",
+      "Bash(yt-dlp --flat-playlist -j \"ytsearch5:conference room meeting group discussion stock footage free\")",
+      "Bash(yt-dlp --flat-playlist -j \"ytsearch5:person coding computer programming stock footage free\")",
+      "Bash(yt-dlp --flat-playlist -j \"ytsearch5:mentor coaching session one on one meeting stock footage\")",
+      "Bash(yt-dlp --flat-playlist -j \"ytsearch5:person reading book studying close up stock footage free\")",
+      "Bash(yt-dlp --flat-playlist -j \"ytsearch5:person walking through door opportunity stock footage free\")",
+      "Bash(yt-dlp -f \"bestvideo[ext=mp4][height<=1080]\" -o \"remotion-project/public/broll/teamwork-raw.mp4\" \"https://youtube.com/watch?v=IsWMcLV6Yqg\")",
+      "Bash(yt-dlp -f \"bestvideo[ext=mp4][height<=1080]\" -o \"remotion-project/public/broll/conference-raw.mp4\" \"https://youtube.com/watch?v=F8L4jY2dKlQ\")",
+      "Bash(yt-dlp -f \"bestvideo[ext=mp4][height<=1080]\" -o \"remotion-project/public/broll/coding-raw.mp4\" \"https://youtube.com/watch?v=AUjhT45GjsU\")",
+      "Bash(yt-dlp -f \"bestvideo[ext=mp4][height<=1080]\" -o \"remotion-project/public/broll/reading-raw.mp4\" \"https://youtube.com/watch?v=vVlnAqOtr4U\")",
+      "Bash(yt-dlp -f \"bestvideo[ext=mp4][height<=1080]\" -o \"remotion-project/public/broll/walking-light-raw.mp4\" \"https://youtube.com/watch?v=s98SqZqOr14\")"
+    ]
+  }
+}
