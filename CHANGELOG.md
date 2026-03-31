@@ -1,5 +1,46 @@
 # Changelog
 
+## 2026-03-31 — Whisper-Timed Left-Panel Animations + Split Avatar Layout (v2)
+
+### Final Output
+- `output/3-types-of-people-final-v2.mp4` — 39MB, **4:05** total
+- Split layout: avatar RIGHT half, animated content LEFT half — both intro and outro
+
+### IntroScene — 5 Whisper-Timed Phases
+All timings sourced from faster-whisper word-level timestamps on avatar audio:
+- **Phase 1 (f0–135):** Credential card — Scott Magnacca / Co-Founder / Salesforlife.ai with spring entrance and glow ring
+- **Phase 2 (f125–370):** "25 YEARS" slams in white at f147 (when Scott says "25"), "IN FINANCIAL SERVICES" fades below at f172
+- **Phase 3 (f362–486):** Animated SVG exponential learning curve — traditional flat dashed line vs. animated cyan exponential path drawing in with strokeDashoffset technique. Labels: "Traditional: 25 years" (orange) vs "Compressed" (cyan dot + callout)
+- **Phase 4 (f476–700):** Gold sparkle word-by-word text build — each word triggered at its Whisper frame: "CHANGE THE WAY" (f535), "YOU WORK" (f562), "LEAD" (f571), "& GROW" (f606), "IN THE NEXT 12 MONTHS" (f627). Sparkle: textShadow pulses 3x on word entry then settles.
+- **Phase 5 (f691–728):** hookText + topicTitle spring in for "Let's get into it"
+
+### OutroScene — 4 Whisper-Timed Phases
+Scott actually said MORE than the script — captured by Whisper (includes "free AI risk assessment" and "Will your job be next?"):
+- **Phase 1 (f0–91):** "YOUR CIRCLE IS YOUR CATALYST" KineticText (cyan, existing style)
+- **Phase 2 (f28–230):** "THREE POWERFUL IDEAS" — gold word-by-word build at f28/f40/f56 (Whisper-timed "three"/"powerful"/"ideas")
+- **Phase 3 (f92–235):** Sprint B-roll — framed OffthreadVideo player with corner accent markers, "Radically shift your trajectory" label
+- **Phase 4 (f229–end):** AI quiz card — styled Remotion recreation of scottmagnacca.com quiz, TypewriterText URL. Card matches brand (navy bg, blue border glow, answer options A–D)
+
+### Layout Architecture (new standard for all future videos)
+- Avatar: right 960px panel, `objectFit: 'cover'`, feathered left edge gradient blends into left panel
+- Content: left 960px panel, absolutely positioned phases that crossfade with `phaseOpacity()` helper
+- Vertical separator: subtle `${accentColor}30` gradient line at x=952
+- Background: solid #0a0e1a matches HeyGen avatar BG — no seam visible
+
+### New Assets
+- `public/broll/sprint-win.mp4` — 6s, 1920x1080, h264, no audio (YouTube, trimmed)
+
+### Best Practices Established (see memory)
+- Run Whisper on avatar audio BEFORE coding animations — always use exact frame timestamps
+- phaseOpacity(frame, enter, exit, fade) helper for smooth crossfades between phases
+- SparkleWords component: each word triggered at its individual Whisper frame, not estimated
+- Quiz card built as Remotion component (not static PNG) — animates, matches palette
+
+### GitHub
+- Committed: e158786 → `smagnacca/smagnacca-video-editing-project` (main)
+
+---
+
 ## 2026-03-31 — Avatar Intro/Outro Spliced into First Complete Video
 
 ### Final Output
