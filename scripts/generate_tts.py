@@ -49,7 +49,7 @@ The Believer pushes you to explore. Your Peer keeps you accountable to growth. T
 
 But none of it matters if you're not building practical skills that match the pace of change. Right now, that means AI. Not theory. Not hype. Hands-on skills that directly boost your income and accelerate your career. The people in your corner can open the door. But you have to walk through it.
 
-Your circle is your catalyst. Choose it wisely. And start building the skills that make you impossible to ignore. Visit scott mag-na-ka dot com."""
+Your circle is your catalyst. Choose it wisely. And start building the skills that make you impossible to ignore. Visit me at my personal website below to learn how you can master and apply these skills today."""
 
 # ─── Assertions: verify old text is NOT present and new text IS present ───
 assert "I kept going" not in TEXT, "OLD TEXT STILL PRESENT"
@@ -58,7 +58,7 @@ assert "when he wanted to quit" not in TEXT, "OLD TEXT STILL PRESENT"
 assert "We made a pact" in TEXT, "New Peer intro missing"
 assert "Neither of us would let the other give up" in TEXT, "New Peer pact text missing"
 assert "when he hit a wall, I did the same for him" in TEXT, "New Peer reciprocity text missing"
-assert "mag-na-ka" in TEXT, "Phonetic Magnacca spelling missing"
+assert "Visit me at my personal website below" in TEXT, "New CTA closing text missing"
 assert "separates" not in TEXT, "OLD 'separates' text still present — should be removed"
 assert "all share three common attributes" in TEXT, "New Bridge intro missing"
 assert "virtually all successful people have" in TEXT, "New Bridge attributes text missing"

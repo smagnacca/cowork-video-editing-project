@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-03-31 (v5.1) — CTA Closing Fix
+- Replaced spoken name/URL in CTA with: "Visit me at my personal website below to learn how you can master and apply these skills today"
+- URL still displayed visually (`scottmagnacca.com`) — only the spoken narration changed
+- Regenerated TTS, re-ran Whisper, updated all scene timings and cue points
+- Video duration: 3:19, 5971 frames, 30fps, 1920x1080, 41.5 MB
+
+---
+
 ## 2026-03-31 (v5) — Comprehensive B-Roll, Visual Polish & Narration Updates
 
 ### Narration Changes

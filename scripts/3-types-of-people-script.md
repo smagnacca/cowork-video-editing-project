@@ -80,7 +80,7 @@ But none of it matters if you're not building practical skills that match the pa
 **[Visual: Clean dark background, scottmagnacca.com URL fades in with glassmorphism frame. Subtle particle background. Logo if available.]**
 
 **NARRATOR:**
-"Your circle is your catalyst. Choose it wisely. And start building the skills that make you impossible to ignore. Visit scottmagnacca.com."
+"Your circle is your catalyst. Choose it wisely. And start building the skills that make you impossible to ignore. Visit me at my personal website below to learn how you can master and apply these skills today."
 
 **[Kinetic text: "scottmagnacca.com" — large, glowing cyan with shimmer effect. Holds for 3 seconds.]**
 

@@ -28,19 +28,19 @@ const COLORS = {
 
 // ─── Scene Timings (at 30fps) ────────────────────────────────────
 // Timestamps from Whisper word-level transcription (regenerated 2026-03-31).
-// Audio duration: ~193s (5790 frames). CTA holds 5s (150 frames) past audio end.
+// Audio duration: ~194s (5820 frames). CTA holds 5s (150 frames) past audio end.
 const SCENE_1_START = 0;
-const SCENE_1_END = 488;       // 16.26s — "Number one" starts (Believer)
-const SCENE_2_START = 488;
-const SCENE_2_END = 1844;      // 61.48s — "Number two" starts (Peer)
-const SCENE_3_START = 1844;
-const SCENE_3_END = 3319;      // 110.62s — "Number three" starts (Coach)
-const SCENE_4_START = 3319;
-const SCENE_4_END = 4517;      // 150.58s — "These three types" starts (Bridge)
-const SCENE_5_START = 4517;
-const SCENE_5_END = 5511;      // 183.70s — "Your circle is your catalyst" starts (CTA)
-const SCENE_6_START = 5511;
-const SCENE_6_END = 5940;      // CTA holds 5s past audio end (~193s = 5790 frames)
+const SCENE_1_END = 487;       // 16.24s — "Number one" starts (Believer)
+const SCENE_2_START = 487;
+const SCENE_2_END = 1823;      // 60.76s — "Number two" starts (Peer)
+const SCENE_3_START = 1823;
+const SCENE_3_END = 3306;      // 110.20s — "Number three" starts (Coach)
+const SCENE_4_START = 3306;
+const SCENE_4_END = 4498;      // 149.92s — "These three types" starts (Bridge)
+const SCENE_5_START = 4498;
+const SCENE_5_END = 5483;      // 182.76s — "Your circle is your catalyst" starts (CTA)
+const SCENE_6_START = 5483;
+const SCENE_6_END = 5971;      // CTA holds 5s past audio end (~194s = 5821 frames)
 
 // ─── Animated Background ─────────────────────────────────────────
 const AnimatedBackground: React.FC<{
@@ -482,7 +482,7 @@ const SceneBridge: React.FC = () => {
   const { fps } = useVideoConfig();
 
   // Whisper timestamps for when each attribute is spoken (local frames within Bridge scene)
-  const checkmarkTriggers = [226, 259, 293]; // "Curiosity" 158.10s, "Lifelong learning" 159.20s, "Adaptability" 160.34s
+  const checkmarkTriggers = [229, 259, 293]; // "Curiosity" 157.54s, "Lifelong learning" 158.54s, "Adaptability" 159.68s
 
   const cards = [
     { title: 'Curiosity', color: COLORS.cyan, subtitle: 'The Believer pushes you to explore.', icon: '🔍' },
@@ -609,15 +609,15 @@ const SceneBridge: React.FC = () => {
           { text: 'LEARNING', color: COLORS.gold },
           { text: 'ADAPTABILITY', color: COLORS.orange },
         ]}
-        delay={226}
-        stagger={33}
+        delay={229}
+        stagger={32}
       />
 
       {/* B-roll: walking toward light — "you have to walk through it" (182.70s) */}
       <BRollPlayer
         src="walking-light.mp4"
         accentColor={COLORS.cyan}
-        startFrame={964}
+        startFrame={953}
         durationFrames={150}
       />
     </AbsoluteFill>
@@ -715,19 +715,19 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
           bgColor2="#0a1a3a"
           bgColor3={COLORS.bg}
           kineticText="SHARE YOUR GOALS"
-          kineticDelay={1045}
+          kineticDelay={1013}
           brollSrc="bet-on-you.mp4"
-          brollStartFrame={392}
+          brollStartFrame={378}
           brollDuration={120}
           brollClips={[
-            { src: 'bet-on-you.mp4', startFrame: 392, duration: 120 },     // "They bet on you early" (29.34s)
-            { src: 'front-row.mp4', startFrame: 740, duration: 180 },      // "who shows up in the front row" (40.94s)
-            { src: 'texting.mp4', startFrame: 817, duration: 150 },        // "who sends the how's the project going message" (43.50s)
+            { src: 'bet-on-you.mp4', startFrame: 378, duration: 120 },     // "They bet on you early" (28.84s)
+            { src: 'front-row.mp4', startFrame: 722, duration: 180 },      // "who shows up in the front row" (40.30s)
+            { src: 'texting.mp4', startFrame: 796, duration: 150 },        // "who sends the how's the project going message" (42.78s)
           ]}
         />
         {/* Pull quotes — key phrases featured as italic quotes */}
-        <PullQuote text="They bet on you early" color={COLORS.cyan} delay={392} duration={100} />
-        <PullQuote text="Your potential only compounds when you do" color={COLORS.cyan} delay={1284} duration={100} />
+        <PullQuote text="They bet on you early" color={COLORS.cyan} delay={378} duration={100} />
+        <PullQuote text="Your potential only compounds when you do" color={COLORS.cyan} delay={1256} duration={100} />
       </Sequence>
 
       {/* Scene 3: The Peer — multiple B-roll clips at narration cue points */}
@@ -742,18 +742,18 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
           bgColor2="#2a1a4a"
           bgColor3={COLORS.bg}
           kineticText="PROXIMITY IS THE PROGRAM"
-          kineticDelay={799}
+          kineticDelay={805}
           brollSrc="teamwork.mp4"
-          brollStartFrame={278}
+          brollStartFrame={260}
           brollDuration={150}
           brollClips={[
-            { src: 'teamwork.mp4', startFrame: 278, duration: 150 },      // "keep building" (70.74s)
+            { src: 'teamwork.mp4', startFrame: 260, duration: 150 },      // "keep building" (69.42s)
             { src: 'conference.mp4', startFrame: 677, duration: 150 },    // "masterminds, communities" (84.06s)
-            { src: 'coding.mp4', startFrame: 1162, duration: 150 },       // "building real AI skills" (100.20s)
+            { src: 'coding.mp4', startFrame: 1162, duration: 150 },       // "building real AI skills" (99.48s)
           ]}
         />
-        <PullQuote text="Proximity is the program" color={COLORS.gold} delay={799} duration={100} />
-        <PullQuote text="That gap is widening every single day" color={COLORS.gold} delay={1419} duration={100} />
+        <PullQuote text="Proximity is the program" color={COLORS.gold} delay={805} duration={100} />
+        <PullQuote text="That gap is widening every single day" color={COLORS.gold} delay={1424} duration={100} />
       </Sequence>
 
       {/* Scene 4: The Coach — multiple B-roll clips at narration cue points */}
@@ -768,17 +768,17 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
           bgColor2="#1a0a1a"
           bgColor3="#050810"
           kineticText="FILTER FOR TRUTH"
-          kineticDelay={319}
+          kineticDelay={325}
           brollSrc="laptop.mp4"
-          brollStartFrame={555}
+          brollStartFrame={560}
           brollDuration={150}
           brollClips={[
-            { src: 'laptop.mp4', startFrame: 555, duration: 150 },        // "give you a mirror" (129.12s)
-            { src: 'reading.mp4', startFrame: 1076, duration: 150 },      // "lifelong learners" (146.48s)
+            { src: 'laptop.mp4', startFrame: 560, duration: 150 },        // "give you a mirror" (128.88s)
+            { src: 'reading.mp4', startFrame: 1066, duration: 150 },      // "lifelong learners" (145.74s)
           ]}
         />
-        <PullQuote text="They'll give you a mirror" color={COLORS.orange} delay={509} duration={100} />
-        <PullQuote text="They're endlessly curious — they're lifelong learners" color={COLORS.orange} delay={1028} duration={120} />
+        <PullQuote text="They'll give you a mirror" color={COLORS.orange} delay={514} duration={100} />
+        <PullQuote text="They're endlessly curious — they're lifelong learners" color={COLORS.orange} delay={1021} duration={120} />
       </Sequence>
 
       <Sequence from={SCENE_5_START} durationInFrames={SCENE_5_END - SCENE_5_START}>
