@@ -273,14 +273,18 @@ export const OutroScene: React.FC<{
       )}
 
       {/* ── Avatar — RIGHT HALF ─────────────────────────────────────────────── */}
+      {/* CRITICAL: Never use objectFit/objectPosition on OffthreadVideo — Remotion's headless
+          renderer ignores CSS objectFit, causing the full 1920×1080 video to overflow the
+          container rightward. Always use explicit px dimensions instead. */}
       {scene.avatarSrc && (
         <div style={{
           position: 'absolute', right: 0, top: 0, width: 960, height: 1080,
-          overflow: 'hidden',
+          overflow: 'hidden', backgroundColor: colors.bg,
         }}>
+          {/* Render at full 1920×1080, anchored right — overflow:hidden clips to right 960px */}
           <OffthreadVideo
             src={staticFile(scene.avatarSrc)}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+            style={{ position: 'absolute', right: 0, top: 0, width: 1920, height: 1080 }}
           />
           {/* Feather left edge */}
           <div style={{

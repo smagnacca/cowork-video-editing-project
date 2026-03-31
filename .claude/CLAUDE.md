@@ -65,6 +65,24 @@ When Scott starts a new chat in this folder, greet him with the following prompt
 ### 1. NO WebkitBackgroundClip in Remotion
 **NEVER** use `WebkitBackgroundClip: 'text'`, `WebkitTextFillColor: 'transparent'`, or CSS gradient-clip text effects. They render as SOLID COLOR BARS in Remotion's headless Chrome. Use solid `color` + `textShadow` glow instead.
 
+### 1b. NO objectFit / objectPosition on OffthreadVideo
+**NEVER** use `objectFit: 'cover'`, `objectFit: 'contain'`, or `objectPosition` on `<OffthreadVideo>`. Remotion's headless Chrome renderer ignores these CSS properties — the video renders at its native 1920×1080 size and **overflows the container off-screen** (avatar pushed out of the right edge).
+**ALWAYS** use explicit pixel dimensions instead:
+```tsx
+// ✅ CORRECT — full-resolution, anchored right, clipped by overflow:hidden on parent
+<div style={{ position: 'absolute', right: 0, top: 0, width: 960, height: 1080,
+              overflow: 'hidden', backgroundColor: colors.bg }}>
+  <OffthreadVideo
+    src={staticFile(scene.avatarSrc)}
+    style={{ position: 'absolute', right: 0, top: 0, width: 1920, height: 1080 }}
+  />
+</div>
+
+// ❌ WRONG — objectFit ignored, video overflows rightward off-screen
+<OffthreadVideo style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+```
+This lesson came from the HeyGen avatar integration (2026-03-31): avatar was pushed off the right edge of the 1920px frame in the rendered MP4.
+
 ### 2. NO Overlay B-Roll on Dark Backgrounds
 **NEVER** use blend modes (screen, multiply), opacity overlays, or ffmpeg compositing for B-roll on dark backgrounds — it's invisible. Use the SIDE-BY-SIDE layout: card shifts left, B-roll plays in a framed player on the right.
 
