@@ -64,7 +64,7 @@ No podcast or AI chatbot is going to show you that. But here's what a great Coac
 **[Visual: All three glassmorphism cards appear in a row (callback to scottmagnacca.com layout — Curiosity / Lifelong Learning / Adaptive Agility). Particle field intensifies. Cards glow and pulse.]**
 
 **NARRATOR:**
-"These three types of people have one thing in common. A single trait that separates the ones who belong in your corner from the ones quietly holding you back.
+"These three types of people all share three common attributes. They are attributes that virtually all successful people have.
 
 Curiosity. Lifelong learning. Adaptability.
 

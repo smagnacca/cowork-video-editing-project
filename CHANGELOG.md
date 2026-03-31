@@ -1,5 +1,41 @@
 # Changelog
 
+## 2026-03-31 (v5) — Comprehensive B-Roll, Visual Polish & Narration Updates
+
+### Narration Changes
+- Rewrote Bridge section: "These three types of people all share three common attributes. They are attributes that virtually all successful people have." (removed mis-spoken "separates" line)
+- Fixed name pronunciation: `scott mag-na-ka dot com` for correct "Mag-na-ka" delivery
+- Regenerated TTS audio and re-ran Whisper for all new word-level timestamps
+- Updated all scene timing constants to match new audio
+
+### Comprehensive B-Roll Coverage (9 clips across 4 scenes)
+- **Believer scene (3 clips):** horse racing ("bet on you early"), empty room ("front row"), texting close-up ("how's the project going")
+- **Peer scene (3 clips):** teamwork hands ("keep building"), conference room ("masterminds"), coding ("building real AI skills")
+- **Coach scene (2 clips):** laptop ("give you a mirror"), reading book ("lifelong learners")
+- **Bridge scene (1 clip):** walking toward window ("walk through it")
+- B-Roll Auto-Curation Skill created (`.claude/skills/broll-curation/SKILL.md`)
+- B-Roll Catalog with tags for reuse (`remotion-project/public/broll/CATALOG.md`)
+
+### Bridge Scene — Gold Markers & Checkmarks
+- Gold animated border circles each card when its attribute is spoken
+- Green checkmarks spring in sequentially above each card: Curiosity → Lifelong Learning → Adaptability
+- Timed to Whisper word-level timestamps (158.10s, 159.20s, 160.34s)
+
+### Visual Polish Pass
+- **Pull quotes** — Key narration phrases appear as styled italic quotes with colored accent borders (6 quotes across Believer, Peer, Coach scenes)
+- **Pulsing gold/white frame** around hook title text
+- **Kinetic text moved to top** of screen for better visual hierarchy
+- **CTA bouncing arrow** animation pointing to scottmagnacca.com
+- **NoiseOverlay** — Cinematic film grain across entire video for premium feel
+- **KineticTextSequence** timing aligned to Whisper cue points in Bridge scene
+
+### Infrastructure
+- GitHub repo created: `smagnacca/smagnacca-video-editing-project` (private)
+- Whisper timestamps saved to `scripts/whisper_timestamps.json` for reuse
+- Video duration: 3:18, 5940 frames, 30fps, 1920x1080, 41 MB
+
+---
+
 ## 2026-03-30 (v4) — Reusable Video Template System + Audio Sync Fix
 
 ### Audio/Timing Sync Fix

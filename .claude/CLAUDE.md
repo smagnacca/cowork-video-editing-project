@@ -88,6 +88,21 @@ The Python TTS generation script has its own copy of the narration text. After A
 ### 10. Visual Effects Skill Available
 Reference `.claude/skills/visual-effects/SKILL.md` for the Persuasion & Conversion Toolkit — a catalog of visual effects organized by purpose (Focus, Flow, Trust, Revenue, etc.) with implementation prompts.
 
+### 11. Always Do a Final Polish Pass
+Before delivering a video, do a full polish pass:
+- Add **pull quotes** (2 per archetype scene) — styled italic quotes with colored accent borders, timed to Whisper cue points
+- Add **cinematic film grain** (NoiseOverlay, opacity 0.04) across the entire video
+- Add **gold circle markers + green checkmarks** for list/attribute scenes (Bridge-style)
+- Add **CTA bouncing arrow** pointing to the URL
+- Add **pulsing frames** around hook titles
+- Position **kinetic text at top** of screen (not bottom)
+
+### 12. New Video Project Setup
+For every new video project:
+1. Create a new Cowork Remotion project, select "Blank" template, install Skills
+2. Review https://www.remotion.dev/showcase and https://www.remotion.dev/prompts for ideas
+3. Cross-reference with existing skills and CLAUDE.md before starting
+
 ## Reusable Video Template System
 
 ### How to Create a New Video

@@ -14,6 +14,7 @@ import { GlassmorphismCard } from './components/GlassmorphismCard';
 import { KineticText, KineticTextSequence } from './components/KineticText';
 import { MeshGradient, Spotlight } from './components/MeshGradient';
 import { BRollPlayer } from './components/BRollPlayer';
+import { NoiseOverlay } from './components/NoiseOverlay';
 
 // ─── Colors (from scottmagnacca.com) ─────────────────────────────
 const COLORS = {
@@ -26,20 +27,20 @@ const COLORS = {
 };
 
 // ─── Scene Timings (at 30fps) ────────────────────────────────────
-// Timestamps from Whisper word-level transcription, snapped to silence gaps.
-// Audio duration: 193.46s (5803 frames). CTA holds 5s (150 frames) past audio end.
+// Timestamps from Whisper word-level transcription (regenerated 2026-03-31).
+// Audio duration: ~193s (5790 frames). CTA holds 5s (150 frames) past audio end.
 const SCENE_1_START = 0;
-const SCENE_1_END = 483;       // 16.10s — "Number one" starts (Believer)
-const SCENE_2_START = 483;
-const SCENE_2_END = 1824;      // 60.80s — "Number two" starts (Peer)
-const SCENE_3_START = 1824;
-const SCENE_3_END = 3285;      // 109.52s — "Number three" starts (Coach)
-const SCENE_4_START = 3285;
-const SCENE_4_END = 4479;      // 149.32s — "These three types" starts (Bridge)
-const SCENE_5_START = 4479;
-const SCENE_5_END = 5535;      // 184.50s — "Your circle is your catalyst" starts (CTA)
-const SCENE_6_START = 5535;
-const SCENE_6_END = 5953;      // CTA holds 5s past audio end (193.46s = 5803 frames)
+const SCENE_1_END = 488;       // 16.26s — "Number one" starts (Believer)
+const SCENE_2_START = 488;
+const SCENE_2_END = 1844;      // 61.48s — "Number two" starts (Peer)
+const SCENE_3_START = 1844;
+const SCENE_3_END = 3319;      // 110.62s — "Number three" starts (Coach)
+const SCENE_4_START = 3319;
+const SCENE_4_END = 4517;      // 150.58s — "These three types" starts (Bridge)
+const SCENE_5_START = 4517;
+const SCENE_5_END = 5511;      // 183.70s — "Your circle is your catalyst" starts (CTA)
+const SCENE_6_START = 5511;
+const SCENE_6_END = 5940;      // CTA holds 5s past audio end (~193s = 5790 frames)
 
 // ─── Animated Background ─────────────────────────────────────────
 const AnimatedBackground: React.FC<{
@@ -300,6 +301,82 @@ const ArchetypeScene: React.FC<{
   );
 };
 
+// ─── Pull Quote ─────────────────────────────────────────────────
+/** Animated pull-quote that appears bottom-center with a colored left border accent */
+const PullQuote: React.FC<{
+  text: string;
+  color: string;
+  delay: number;
+  duration?: number;
+}> = ({ text, color, delay, duration = 120 }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const localFrame = frame - delay;
+  if (localFrame < 0 || localFrame > duration) return null;
+
+  const entrance = spring({ frame: Math.max(0, localFrame), fps, config: { damping: 16, stiffness: 80 } });
+  const fadeOut = localFrame > duration - 20
+    ? interpolate(localFrame, [duration - 20, duration], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+    : 1;
+
+  return (
+    <div style={{
+      position: 'absolute',
+      bottom: 100,
+      left: '50%',
+      transform: `translateX(-50%) translateY(${interpolate(entrance, [0, 1], [30, 0])}px)`,
+      opacity: entrance * fadeOut,
+      zIndex: 15,
+    }}>
+      <div style={{
+        padding: '18px 36px',
+        borderLeft: `4px solid ${color}`,
+        background: 'rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '0 12px 12px 0',
+        maxWidth: 800,
+      }}>
+        <p style={{
+          color: '#ffffff',
+          fontSize: 28,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          fontWeight: 600,
+          fontStyle: 'italic',
+          margin: 0,
+          lineHeight: 1.4,
+          letterSpacing: 0.5,
+        }}>
+          "{text}"
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// ─── Animated Arrow ─────────────────────────────────────────────
+const AnimatedArrow: React.FC<{ delay?: number; color?: string }> = ({ delay = 60, color = '#00d4ff' }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const localFrame = Math.max(0, frame - delay);
+  const entrance = spring({ frame: localFrame, fps, config: { damping: 14, stiffness: 70 } });
+  const bounce = Math.sin(localFrame * 0.1) * 8;
+
+  return (
+    <div style={{
+      position: 'absolute',
+      top: '38%',
+      left: '50%',
+      transform: `translateX(-50%) translateY(${bounce}px)`,
+      opacity: entrance,
+      zIndex: 10,
+    }}>
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 5v14M5 12l7 7 7-7" />
+      </svg>
+    </div>
+  );
+};
+
 // ─── Pulsing Gold Frame ─────────────────────────────────────────
 const PulsingFrame: React.FC<{
   delay?: number;
@@ -404,6 +481,9 @@ const SceneBridge: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
+  // Whisper timestamps for when each attribute is spoken (local frames within Bridge scene)
+  const checkmarkTriggers = [226, 259, 293]; // "Curiosity" 158.10s, "Lifelong learning" 159.20s, "Adaptability" 160.34s
+
   const cards = [
     { title: 'Curiosity', color: COLORS.cyan, subtitle: 'The Believer pushes you to explore.', icon: '🔍' },
     { title: 'Lifelong Learning', color: COLORS.gold, subtitle: 'Your Peer keeps you accountable.', icon: '📚' },
@@ -424,6 +504,21 @@ const SceneBridge: React.FC = () => {
           const pulse = 1 + Math.sin((frame - cardDelay) * 0.04) * 0.015;
           const glow = interpolate(frame, [300, 500], [0.3, 0.8], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
+          // Gold circle marker: appears when attribute is spoken
+          const markerTrigger = checkmarkTriggers[i];
+          const markerFrame = frame - markerTrigger;
+          const markerActive = markerFrame >= 0;
+          const markerDraw = markerActive
+            ? spring({ frame: Math.max(0, markerFrame), fps, config: { damping: 12, stiffness: 60 } })
+            : 0;
+
+          // Green checkmark: springs in ~15 frames after the marker starts
+          const checkFrame = frame - (markerTrigger + 15);
+          const checkActive = checkFrame >= 0;
+          const checkEntrance = checkActive
+            ? spring({ frame: Math.max(0, checkFrame), fps, config: { damping: 14, stiffness: 100 } })
+            : 0;
+
           return (
             <div
               key={i}
@@ -433,8 +528,10 @@ const SceneBridge: React.FC = () => {
                 background: 'rgba(255,255,255,0.05)',
                 backdropFilter: 'blur(20px)',
                 borderRadius: 20,
-                border: `1px solid ${card.color}30`,
-                boxShadow: `0 8px 32px rgba(0,0,0,0.3), 0 0 ${40 * glow}px ${card.color}20`,
+                border: markerActive ? `3px solid ${COLORS.gold}` : `1px solid ${card.color}30`,
+                boxShadow: markerActive
+                  ? `0 8px 32px rgba(0,0,0,0.3), 0 0 ${40 * glow}px ${card.color}20, 0 0 30px ${COLORS.gold}40, 0 0 60px ${COLORS.gold}20`
+                  : `0 8px 32px rgba(0,0,0,0.3), 0 0 ${40 * glow}px ${card.color}20`,
                 transform: `translateY(${interpolate(entrance, [0, 1], [60, 0])}px) scale(${entrance * pulse})`,
                 opacity: entrance,
                 display: 'flex',
@@ -444,6 +541,48 @@ const SceneBridge: React.FC = () => {
                 position: 'relative',
               }}
             >
+              {/* Gold circle marker — draws around card border */}
+              {markerActive && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: -4,
+                    borderRadius: 24,
+                    border: `3px solid ${COLORS.gold}`,
+                    opacity: markerDraw,
+                    boxShadow: `0 0 20px ${COLORS.gold}50, 0 0 40px ${COLORS.gold}30`,
+                    pointerEvents: 'none',
+                  }}
+                />
+              )}
+
+              {/* Green checkmark — appears above card */}
+              {checkActive && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: -50,
+                    left: '50%',
+                    transform: `translateX(-50%) scale(${checkEntrance})`,
+                    opacity: checkEntrance,
+                    fontSize: 40,
+                    width: 50,
+                    height: 50,
+                    borderRadius: '50%',
+                    background: '#22c55e',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 20px #22c55e80, 0 4px 12px rgba(0,0,0,0.3)',
+                    zIndex: 20,
+                  }}
+                >
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              )}
+
               <div style={{ position: 'absolute', top: 0, left: '15%', right: '15%', height: 2, background: `linear-gradient(90deg, transparent, ${card.color}, transparent)`, opacity: 0.6 }} />
               <div
                 style={{
@@ -470,15 +609,15 @@ const SceneBridge: React.FC = () => {
           { text: 'LEARNING', color: COLORS.gold },
           { text: 'ADAPTABILITY', color: COLORS.orange },
         ]}
-        delay={500}
-        stagger={25}
+        delay={226}
+        stagger={33}
       />
 
-      {/* B-roll: walking toward light — "you have to walk through it" (183.2s) */}
+      {/* B-roll: walking toward light — "you have to walk through it" (182.70s) */}
       <BRollPlayer
         src="walking-light.mp4"
         accentColor={COLORS.cyan}
-        startFrame={797}
+        startFrame={964}
         durationFrames={150}
       />
     </AbsoluteFill>
@@ -545,6 +684,9 @@ const SceneCTA: React.FC = () => {
           Build the skills that make you impossible to ignore
         </p>
       </AbsoluteFill>
+
+      {/* Bouncing arrow pointing to URL */}
+      <AnimatedArrow delay={50} color={COLORS.cyan} />
     </AbsoluteFill>
   );
 };
@@ -573,16 +715,19 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
           bgColor2="#0a1a3a"
           bgColor3={COLORS.bg}
           kineticText="SHARE YOUR GOALS"
-          kineticDelay={1072}
+          kineticDelay={1045}
           brollSrc="bet-on-you.mp4"
-          brollStartFrame={369}
+          brollStartFrame={392}
           brollDuration={120}
           brollClips={[
-            { src: 'bet-on-you.mp4', startFrame: 369, duration: 120 },     // "They bet on you early" (28.40s)
-            { src: 'front-row.mp4', startFrame: 705, duration: 180 },      // "who shows up in the front row" (39.60s)
-            { src: 'texting.mp4', startFrame: 801, duration: 150 },        // "who sends the how's the project going message" (42.80s)
+            { src: 'bet-on-you.mp4', startFrame: 392, duration: 120 },     // "They bet on you early" (29.34s)
+            { src: 'front-row.mp4', startFrame: 740, duration: 180 },      // "who shows up in the front row" (40.94s)
+            { src: 'texting.mp4', startFrame: 817, duration: 150 },        // "who sends the how's the project going message" (43.50s)
           ]}
         />
+        {/* Pull quotes — key phrases featured as italic quotes */}
+        <PullQuote text="They bet on you early" color={COLORS.cyan} delay={392} duration={100} />
+        <PullQuote text="Your potential only compounds when you do" color={COLORS.cyan} delay={1284} duration={100} />
       </Sequence>
 
       {/* Scene 3: The Peer — multiple B-roll clips at narration cue points */}
@@ -597,16 +742,18 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
           bgColor2="#2a1a4a"
           bgColor3={COLORS.bg}
           kineticText="PROXIMITY IS THE PROGRAM"
-          kineticDelay={1168}
+          kineticDelay={799}
           brollSrc="teamwork.mp4"
-          brollStartFrame={315}
+          brollStartFrame={278}
           brollDuration={150}
           brollClips={[
-            { src: 'teamwork.mp4', startFrame: 315, duration: 150 },      // "keep building" (71.3s)
-            { src: 'conference.mp4', startFrame: 678, duration: 150 },    // "masterminds, communities" (83.4s)
-            { src: 'coding.mp4', startFrame: 1146, duration: 150 },       // "building real AI skills" (99.0s)
+            { src: 'teamwork.mp4', startFrame: 278, duration: 150 },      // "keep building" (70.74s)
+            { src: 'conference.mp4', startFrame: 677, duration: 150 },    // "masterminds, communities" (84.06s)
+            { src: 'coding.mp4', startFrame: 1162, duration: 150 },       // "building real AI skills" (100.20s)
           ]}
         />
+        <PullQuote text="Proximity is the program" color={COLORS.gold} delay={799} duration={100} />
+        <PullQuote text="That gap is widening every single day" color={COLORS.gold} delay={1419} duration={100} />
       </Sequence>
 
       {/* Scene 4: The Coach — multiple B-roll clips at narration cue points */}
@@ -621,15 +768,17 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
           bgColor2="#1a0a1a"
           bgColor3="#050810"
           kineticText="FILTER FOR TRUTH"
-          kineticDelay={955}
+          kineticDelay={319}
           brollSrc="laptop.mp4"
-          brollStartFrame={566}
+          brollStartFrame={555}
           brollDuration={150}
           brollClips={[
-            { src: 'laptop.mp4', startFrame: 566, duration: 150 },        // "give you a mirror" (128.4s)
-            { src: 'reading.mp4', startFrame: 1073, duration: 150 },      // "lifelong learners" (145.3s)
+            { src: 'laptop.mp4', startFrame: 555, duration: 150 },        // "give you a mirror" (129.12s)
+            { src: 'reading.mp4', startFrame: 1076, duration: 150 },      // "lifelong learners" (146.48s)
           ]}
         />
+        <PullQuote text="They'll give you a mirror" color={COLORS.orange} delay={509} duration={100} />
+        <PullQuote text="They're endlessly curious — they're lifelong learners" color={COLORS.orange} delay={1028} duration={120} />
       </Sequence>
 
       <Sequence from={SCENE_5_START} durationInFrames={SCENE_5_END - SCENE_5_START}>
@@ -639,6 +788,9 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
       <Sequence from={SCENE_6_START} durationInFrames={SCENE_6_END - SCENE_6_START}>
         <SceneCTA />
       </Sequence>
+
+      {/* Global film grain overlay for cinematic feel */}
+      <NoiseOverlay opacity={0.04} animate />
     </AbsoluteFill>
   );
 };

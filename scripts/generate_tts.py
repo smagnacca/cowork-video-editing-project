@@ -41,7 +41,7 @@ The Coach won't just give you a strategy. They'll give you a mirror. So you star
 
 No podcast or AI chatbot is going to show you that. But here's what a great Coach will also tell you... the ones who thrive aren't just coachable. They're endlessly curious. They're lifelong learners. They don't just adapt to change — they lead it.
 
-These three types of people have one thing in common. A single trait that separates the ones who belong in your corner from the ones quietly holding you back.
+These three types of people all share three common attributes. They are attributes that virtually all successful people have.
 
 Curiosity. Lifelong learning. Adaptability.
 
@@ -49,7 +49,7 @@ The Believer pushes you to explore. Your Peer keeps you accountable to growth. T
 
 But none of it matters if you're not building practical skills that match the pace of change. Right now, that means AI. Not theory. Not hype. Hands-on skills that directly boost your income and accelerate your career. The people in your corner can open the door. But you have to walk through it.
 
-Your circle is your catalyst. Choose it wisely. And start building the skills that make you impossible to ignore. Visit scott mag-nah-kah dot com."""
+Your circle is your catalyst. Choose it wisely. And start building the skills that make you impossible to ignore. Visit scott mag-na-ka dot com."""
 
 # ─── Assertions: verify old text is NOT present and new text IS present ───
 assert "I kept going" not in TEXT, "OLD TEXT STILL PRESENT"
@@ -58,7 +58,10 @@ assert "when he wanted to quit" not in TEXT, "OLD TEXT STILL PRESENT"
 assert "We made a pact" in TEXT, "New Peer intro missing"
 assert "Neither of us would let the other give up" in TEXT, "New Peer pact text missing"
 assert "when he hit a wall, I did the same for him" in TEXT, "New Peer reciprocity text missing"
-assert "mag-nah-kah" in TEXT, "Phonetic Magnacca spelling missing"
+assert "mag-na-ka" in TEXT, "Phonetic Magnacca spelling missing"
+assert "separates" not in TEXT, "OLD 'separates' text still present — should be removed"
+assert "all share three common attributes" in TEXT, "New Bridge intro missing"
+assert "virtually all successful people have" in TEXT, "New Bridge attributes text missing"
 print("✓ All text assertions passed")
 
 async def main():
