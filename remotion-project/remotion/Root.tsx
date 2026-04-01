@@ -49,7 +49,7 @@ const OutroComposition: React.FC = () => (
       kineticText: 'YOUR CIRCLE IS YOUR CATALYST',
       kineticColor: 'accent1',
       speakerName: 'Scott Magnacca',
-      timing: { startFrame: 0, endFrame: 662 },
+      timing: { startFrame: 0, endFrame: 643 },
     }}
     colors={COLORS}
     effects={EFFECTS}
@@ -101,7 +101,7 @@ const StorysellingOutroComposition: React.FC = () => (
       kineticText: 'STORIES SELL. DATA DOESN\'T.',
       kineticColor: 'accent1',
       speakerName: 'Scott Magnacca',
-      timing: { startFrame: 0, endFrame: 662 },
+      timing: { startFrame: 0, endFrame: 643 },
     }}
     colors={SS_COLORS}
     effects={SS_EFFECTS}
@@ -135,11 +135,11 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
       />
 
-      {/* Standalone outro (22.06s = 662 frames) */}
+      {/* Standalone outro (21.42s = 643 frames — Scott_outro_4.1.26.mp4) */}
       <Composition
         id="OutroSceneComp"
         component={OutroComposition}
-        durationInFrames={662}
+        durationInFrames={643}
         fps={30}
         width={1920}
         height={1080}
@@ -206,7 +206,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="StorysellingOutroComp"
         component={StorysellingOutroComposition}
-        durationInFrames={662}
+        durationInFrames={643}
         fps={30}
         width={1920}
         height={1080}

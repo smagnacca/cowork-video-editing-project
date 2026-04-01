@@ -243,16 +243,15 @@ export const OutroScene: React.FC<{
   const accentColor  = rc(scene.accentColor, colors, colors.accent2);
   const kineticColor = rc(scene.kineticColor, colors, colors.accent1);
 
-  // ── Phase opacities (Whisper-timed) ──────────────────────────────────────
-  // f0–f91:  "So we just discussed" → Kinetic text "YOUR CIRCLE IS YOUR CATALYST"
-  // f28–f91: "three powerful ideas" → gold word build
-  // f92–f228: "radically shift..." → sprint B-roll
-  // f229–f528: "scottmagnacca.com / free AI risk assessment" → quiz card
-  // f529–end: "Will your job be next / I'll see you" → hold + fade
+  // ── Phase opacities (Whisper-timed to Scott_outro_4.1.26.mp4 — 643 frames) ──
+  // f0–f95:   "So we just discussed" → Kinetic text
+  // f28–f275: "several powerful ideas" → gold word build (words at f30/f47/f64)
+  // f103–f295: "radically shift your productivity..." → sprint B-roll
+  // f280–end: "If this resonated / click link or QR / take the quiz / let's continue" → quiz card
   const opKinetic = phaseOpacity(frame, 0, 95, 20);
-  const opGold    = phaseOpacity(frame, 28, 230, 18);
-  const opSprint  = phaseOpacity(frame, 92, 235, 22);
-  const opQuiz    = phaseOpacity(frame, 229, sceneDuration, 22);
+  const opGold    = phaseOpacity(frame, 28, 275, 18);
+  const opSprint  = phaseOpacity(frame, 103, 295, 22);
+  const opQuiz    = phaseOpacity(frame, 280, sceneDuration, 22);
 
   // Overall fade out (last 30 frames)
   const globalOpacity = frame >= sceneDuration - 30
@@ -330,11 +329,11 @@ export const OutroScene: React.FC<{
               We just discussed
             </div>
             <GoldWordBuild
-              words={['THREE', 'POWERFUL', 'IDEAS']}
+              words={['SEVERAL', 'POWERFUL', 'IDEAS']}
               color={colors.accent2}
               fontSize={68}
-              startFrame={28}
-              stagger={12}
+              startFrame={30}
+              stagger={17}
             />
           </div>
         )}
@@ -344,7 +343,7 @@ export const OutroScene: React.FC<{
           <div style={{ position: 'absolute' }}>
             <SprintPanel
               opacity={opSprint}
-              startFrame={92}
+              startFrame={103}
               accentColor={accentColor}
             />
           </div>
@@ -355,7 +354,7 @@ export const OutroScene: React.FC<{
           <div style={{ position: 'absolute' }}>
             <QuizCard
               opacity={opQuiz}
-              startFrame={229}
+              startFrame={280}
               accentColor={accentColor}
               ctaUrl={ctaUrl}
               colors={colors}

@@ -2,6 +2,40 @@
 
 ---
 
+## [Storyselling v8] 2026-04-01 — New Outro Video (Scott_outro_4.1.26) + All Fixes
+
+**Output:** `output/storyselling-ai-v8-final.mp4` (28MB, 3:14)
+**Files:** `public/avatar/outro-avatar.mp4`, `src/components/OutroScene.tsx`, `remotion/Root.tsx`
+
+### Changes
+- **New HeyGen outro** (`Scott_outro_4.1.26.mp4`) recorded by Scott, replaces old outro-avatar.mp4
+  - New duration: 21.42s → 643 frames (was 22.06s / 662 frames)
+  - New script: *"So we just discussed several powerful ideas... If this resonated with you, click the link or scan the QR code on your screen and take the 60-second quiz and let's continue this conversation. I'll see you in the next one."*
+- **OutroScene.tsx phase timings updated** to match new Whisper word timestamps:
+  - Phase 1 (kinetic text): f0–f95
+  - Phase 2 (gold word build): f28–f275, words "SEVERAL POWERFUL IDEAS" (was "THREE POWERFUL IDEAS"), stagger=17 to match Scott's cadence at f30/f47/f64
+  - Phase 3 (sprint B-roll): f103–f295
+  - Phase 4 (quiz card): f280–end
+- **Root.tsx**: All `endFrame` and `durationInFrames` updated 662→643 (OutroSceneComp + StorysellingOutroComp)
+- **Audio silence fix retained**: 1:20–1:22 muted from v7 carried forward
+
+### Going forward
+- This outro is now the **evergreen standard outro** for ALL future videos
+- Works for any topic — no reference to a specific video's content
+- Combine with existing intro (`intro-avatar.mp4`) for all new videos
+
+---
+
+## [Storyselling v7] 2026-04-01 — Surgical Silence Fix at 1:20–1:22
+
+**Output:** `output/storyselling-ai-v7-final.mp4` (28MB, 3:14)
+
+### Changes
+- ffmpeg `volume=enable='between(t,80,82)':volume=0` muted the remaining mispronounced segment
+- No re-render required — pure audio post-processing
+
+---
+
 ## [Storyselling v6] 2026-04-01 — Full Audio Mispronunciation Scan + Fix
 
 **Output:** `output/storyselling-ai-v6-final.mp4` (28MB, 3:14)
