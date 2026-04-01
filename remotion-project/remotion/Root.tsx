@@ -1,7 +1,8 @@
 import React from 'react';
-import { Composition } from 'remotion';
+import { Composition, AbsoluteFill, Audio, staticFile } from 'remotion';
 import { ThreeTypesVideo } from '../src/ThreeTypesVideo';
 import { TemplateVideo } from '../src/TemplateVideo';
+import { StorysellingVideo, StoryselllingCTAOnlyComp } from '../src/StorysellingVideo';
 import { IntroScene } from '../src/components/IntroScene';
 import { OutroScene } from '../src/components/OutroScene';
 
@@ -15,7 +16,7 @@ const EFFECTS = {
   hueShift: true, kineticStyle: 'spring-glow' as const,
 };
 
-// ─── Standalone intro wrapper ─────────────────────────────────────────────────
+// ─── Standalone intro wrapper (3 Types) ──────────────────────────────────────
 const IntroComposition: React.FC = () => (
   <IntroScene
     scene={{
@@ -35,7 +36,7 @@ const IntroComposition: React.FC = () => (
   />
 );
 
-// ─── Standalone outro wrapper ─────────────────────────────────────────────────
+// ─── Standalone outro wrapper (3 Types) ──────────────────────────────────────
 const OutroComposition: React.FC = () => (
   <OutroScene
     scene={{
@@ -54,6 +55,58 @@ const OutroComposition: React.FC = () => (
     effects={EFFECTS}
     ctaUrl="scottmagnacca.com"
     ctaTagline="Discover your AI leadership edge"
+  />
+);
+
+// ─── Storyselling palette + effects ──────────────────────────────────────────
+const SS_COLORS = {
+  bg: '#000000', accent1: '#005A3B', accent2: '#FFFFFF', accent3: '#005A3B',
+  textPrimary: '#FFFFFF', textSecondary: '#b0b0b0',
+};
+const SS_EFFECTS = {
+  particles: true, noiseOverlay: true, sceneTransitions: 'crossfade' as const,
+  hueShift: false, kineticStyle: 'spring-glow' as const,
+};
+
+// ─── Storyselling intro wrapper ──────────────────────────────────────────────
+const StorysellingIntroComposition: React.FC = () => (
+  <IntroScene
+    scene={{
+      type: 'intro',
+      avatarSrc: 'avatar/intro-avatar.mp4',
+      hookText: 'STORIES SELL. DATA DOESN\'T.',
+      hookColor: 'accent1',
+      topicTitle: 'Storyselling in the Age of AI',
+      topicSubtitle: 'Connection · Story · Impact',
+      speakerName: 'Scott Magnacca',
+      speakerTitle: 'AI & Storyselling Strategist',
+      accentColor: 'accent1',
+      timing: { startFrame: 0, endFrame: 728 },
+    }}
+    colors={SS_COLORS}
+    effects={SS_EFFECTS}
+  />
+);
+
+// ─── Storyselling outro wrapper ──────────────────────────────────────────────
+const StorysellingOutroComposition: React.FC = () => (
+  <OutroScene
+    scene={{
+      type: 'outro',
+      avatarSrc: 'avatar/outro-avatar.mp4',
+      ctaHeadline: 'Take the 60-Second AI Quiz',
+      ctaDescription: 'Discover your AI storyselling edge',
+      ctaButtonText: 'START THE QUIZ',
+      accentColor: 'accent1',
+      kineticText: 'STORIES SELL. DATA DOESN\'T.',
+      kineticColor: 'accent1',
+      speakerName: 'Scott Magnacca',
+      timing: { startFrame: 0, endFrame: 662 },
+    }}
+    colors={SS_COLORS}
+    effects={SS_EFFECTS}
+    ctaUrl="60-second-ai-quiz.netlify.app"
+    ctaTagline="Discover your AI storyselling edge"
   />
 );
 
@@ -116,6 +169,47 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           config: defaultTemplateConfig,
         }}
+      />
+
+      {/* ─── Storyselling CTA scene only (680 frames = 22.67s, audio offset to CTA) ─── */}
+      <Composition
+        id="StoryselllingCTAOnly"
+        component={StoryselllingCTAOnlyComp}
+        durationInFrames={680}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ─── Storyselling in the Age of AI ─── */}
+      <Composition
+        id="StorysellingVideo"
+        component={StorysellingVideo}
+        durationInFrames={4450}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          audioSrc: 'storyselling-ai.mp3',
+        }}
+      />
+
+      <Composition
+        id="StorysellingIntroComp"
+        component={StorysellingIntroComposition}
+        durationInFrames={728}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      <Composition
+        id="StorysellingOutroComp"
+        component={StorysellingOutroComposition}
+        durationInFrames={662}
+        fps={30}
+        width={1920}
+        height={1080}
       />
     </>
   );

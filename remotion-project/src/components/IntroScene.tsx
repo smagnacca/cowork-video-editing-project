@@ -107,53 +107,55 @@ const LearningCurve: React.FC<{
   return (
     <div style={{ opacity: fadeIn, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{
-        fontSize: 14, color: '#a0aec0', letterSpacing: 3, textTransform: 'uppercase',
-        fontFamily: '-apple-system, sans-serif', marginBottom: 8, fontWeight: 600,
+        fontSize: 22, color: '#a0aec0', letterSpacing: 4, textTransform: 'uppercase',
+        fontFamily: '-apple-system, sans-serif', marginBottom: 16, fontWeight: 700,
+        textShadow: `0 0 20px ${accentColor}40`,
       }}>
-        The Learning Curve
+        THE LEARNING CURVE
       </div>
-      <svg viewBox="0 0 440 300" width="460" height="280">
+      {/* 2× bigger: 920×560 */}
+      <svg viewBox="0 0 440 300" width="860" height="520">
         {/* Axes */}
-        <line x1="30" y1="20" x2="30" y2="270" stroke="#ffffff20" strokeWidth="1.5" />
-        <line x1="30" y1="270" x2="420" y2="270" stroke="#ffffff20" strokeWidth="1.5" />
+        <line x1="30" y1="20" x2="30" y2="270" stroke="#ffffff40" strokeWidth="2" />
+        <line x1="30" y1="270" x2="420" y2="270" stroke="#ffffff40" strokeWidth="2" />
         {/* Axis labels */}
-        <text x="225" y="295" fill="#a0aec060" fontSize="10" textAnchor="middle" fontFamily="sans-serif">Time</text>
-        <text x="10" y="145" fill="#a0aec060" fontSize="10" textAnchor="middle" fontFamily="sans-serif" transform="rotate(-90 10 145)">Mastery</text>
+        <text x="225" y="292" fill="#a0aec090" fontSize="14" textAnchor="middle" fontFamily="sans-serif" fontWeight="600">Time</text>
+        <text x="12" y="145" fill="#a0aec090" fontSize="14" textAnchor="middle" fontFamily="sans-serif" fontWeight="600" transform="rotate(-90 12 145)">Mastery</text>
 
         {/* Traditional path — flat, slow, dashed orange */}
         <path d="M 30 250 C 120 248, 250 235, 415 215"
-          fill="none" stroke={orange} strokeWidth="2"
-          strokeDasharray="7 4" opacity={0.55}
+          fill="none" stroke={orange} strokeWidth="2.5"
+          strokeDasharray="8 5" opacity={0.7}
         />
-        <text x="230" y="232" fill={orange} fontSize="11" textAnchor="middle"
-          fontFamily="sans-serif" opacity={0.75}>Traditional: 25 years</text>
+        <text x="240" y="228" fill={orange} fontSize="15" textAnchor="middle"
+          fontFamily="sans-serif" fontWeight="700" opacity={0.9}>Traditional: 25 years</text>
 
-        {/* Exponential curve — animated, cyan */}
+        {/* Exponential curve — animated, cyan — thicker + glowing */}
         <path
           d="M 30 268 C 180 265, 330 210, 415 22"
-          fill="none" stroke={accentColor} strokeWidth="3" strokeLinecap="round"
+          fill="none" stroke={accentColor} strokeWidth="4.5" strokeLinecap="round"
           strokeDasharray={pathLength} strokeDashoffset={dashOffset}
-          style={{ filter: `drop-shadow(0 0 6px ${accentColor}90)` }}
+          style={{ filter: `drop-shadow(0 0 10px ${accentColor}) drop-shadow(0 0 20px ${accentColor}80)` }}
         />
 
         {/* Endpoint dot */}
         {showDot && (
-          <circle cx="415" cy="22" r={interpolate(progress, [0.78, 1], [0, 7], { extrapolateRight: 'clamp' })}
-            fill={accentColor} style={{ filter: `drop-shadow(0 0 12px ${accentColor})` }} />
+          <circle cx="415" cy="22" r={interpolate(progress, [0.78, 1], [0, 10], { extrapolateRight: 'clamp' })}
+            fill={accentColor} style={{ filter: `drop-shadow(0 0 16px ${accentColor})` }} />
         )}
 
         {/* Compressed label */}
         {showLabel && (
           <g opacity={interpolate(progress, [0.88, 1], [0, 1], { extrapolateRight: 'clamp' })}>
-            <line x1="415" y1="22" x2="355" y2="55" stroke={accentColor} strokeWidth="1" strokeDasharray="3 2" opacity="0.7" />
-            <text x="348" y="52" fill={accentColor} fontSize="12" textAnchor="end"
-              fontFamily="sans-serif" fontWeight="700">Compressed</text>
+            <line x1="415" y1="22" x2="350" y2="60" stroke={accentColor} strokeWidth="1.5" strokeDasharray="4 3" opacity="0.8" />
+            <text x="342" y="56" fill={accentColor} fontSize="16" textAnchor="end"
+              fontFamily="sans-serif" fontWeight="800">Compressed</text>
           </g>
         )}
 
         {/* Start/end markers */}
-        <text x="30" y="287" fill="#a0aec050" fontSize="10" textAnchor="middle" fontFamily="sans-serif">Start</text>
-        <text x="415" y="287" fill="#a0aec050" fontSize="10" textAnchor="middle" fontFamily="sans-serif">Now</text>
+        <text x="30" y="287" fill="#a0aec070" fontSize="13" textAnchor="middle" fontFamily="sans-serif">Start</text>
+        <text x="415" y="287" fill="#a0aec070" fontSize="13" textAnchor="middle" fontFamily="sans-serif">Now</text>
       </svg>
     </div>
   );
@@ -170,42 +172,42 @@ const CredentialCard: React.FC<{ opacity: number; colors: VideoColors; accentCol
     <div style={{
       opacity: opacity * ent,
       transform: `translateY(${interpolate(ent, [0, 1], [20, 0])}px)`,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24,
     }}>
-      {/* Logo ring */}
+      {/* Logo ring — 2× larger */}
       <div style={{
-        width: 80, height: 80, borderRadius: '50%',
-        border: `2px solid ${accentColor}60`, background: `${accentColor}10`,
+        width: 160, height: 160, borderRadius: '50%',
+        border: `3px solid ${accentColor}60`, background: `${accentColor}10`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: `0 0 ${30 * glow}px ${accentColor}40`,
-        fontSize: 32,
+        boxShadow: `0 0 ${50 * glow}px ${accentColor}50, 0 0 ${80 * glow}px ${accentColor}25`,
+        fontSize: 72,
       }}>
         🧠
       </div>
       <div style={{
-        fontSize: 26, fontWeight: 700, color: colors.textPrimary,
+        fontSize: 52, fontWeight: 800, color: colors.textPrimary,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-        textAlign: 'center', letterSpacing: -0.5,
+        textAlign: 'center', letterSpacing: -1,
       }}>
         Scott Magnacca
       </div>
       <div style={{
-        height: 2, width: 120,
+        height: 3, width: 240,
         background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)`,
-        opacity: 0.7,
+        opacity: 0.8,
       }} />
       <div style={{
-        fontSize: 18, fontWeight: 400, color: colors.textSecondary,
+        fontSize: 30, fontWeight: 500, color: colors.textSecondary,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-        textAlign: 'center', letterSpacing: 1, textTransform: 'uppercase',
+        textAlign: 'center', letterSpacing: 3, textTransform: 'uppercase',
       }}>
         Co-Founder
       </div>
       <div style={{
-        fontSize: 22, fontWeight: 700, color: accentColor,
+        fontSize: 40, fontWeight: 800, color: accentColor,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         textAlign: 'center',
-        textShadow: `0 0 15px ${accentColor}60`,
+        textShadow: `0 0 20px ${accentColor}80, 0 0 40px ${accentColor}40`,
       }}>
         Salesforlife.ai
       </div>

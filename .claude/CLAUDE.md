@@ -52,6 +52,8 @@ When Scott starts a new chat in this folder, greet him with the following prompt
 3. Render IntroSceneComp + OutroSceneComp → ffmpeg concat all three → `[name]-final.mp4`
 4. **ALWAYS deliver the `-final.mp4`** (intro + content + outro), never the raw content-only render
 
+**⭐ FIRST DRAFT EXCELLENCE STANDARD:** Before writing any code for a new video, load and apply the **First Draft Excellence Checklist** in memory (`feedback_first_draft_excellence.md`). Every new video must score "A" on the first render — no defects that were already fixed in a prior video. The checklist covers: sizing, SVG font math, hook rotation, layout collision, CTA completeness, brand audit, render pipeline. This is MANDATORY.
+
 **What would you like to work on today?**
 - **Create a new video** (concept → script → voiceover → animated MP4 + branded intro/outro)
 - Upgrade the composition templates (new scene types, visual styles)
@@ -86,8 +88,47 @@ This lesson came from the HeyGen avatar integration (2026-03-31): avatar was pus
 ### 2. NO Overlay B-Roll on Dark Backgrounds
 **NEVER** use blend modes (screen, multiply), opacity overlays, or ffmpeg compositing for B-roll on dark backgrounds — it's invisible. Use the SIDE-BY-SIDE layout: card shifts left, B-roll plays in a framed player on the right.
 
-### 3. ALWAYS Verify Script Before TTS
-Before generating audio, READ the exact text being sent to TTS and verify corrections are applied. The script markdown and TTS input can diverge — always confirm.
+### 2b. SVG INTERNAL FONT SIZES — Must Be Scaled to viewBox, NOT Screen Pixels
+**NEVER** write an SVG `fontSize` without checking it against the viewBox dimensions first.
+
+**The bug:** `<text fontSize={11}>` inside `viewBox="0 0 1600 500"` = **11 pixels on screen** — completely illegible.
+
+**The formula:**
+```
+screen_px = (fontSize / viewBoxWidth) × renderedSvgWidth
+```
+For a 1600-wide viewBox rendered at 1600px → `fontSize=11 → 11px screen` ❌ | `fontSize=42 → 42px screen` ✓
+
+**Minimum rules:**
+- Any SVG `fontSize` must yield ≥ 20 screen pixels after the above calculation
+- Prominent labels (bridge names, section titles, infographic captions): fontSize must yield ≥ 36px
+- Infographic graphic spans: must cover ≥ 20% of viewBox width to be visible (e.g. a bridge in a 1600px SVG must be ≥ 320px wide)
+
+**Quick scan command (run before every render):**
+```bash
+# Flags any SVG fontSize below 20 — manually verify if the SVG viewBox makes it smaller
+grep -n "fontSize={[0-9]\b\|fontSize={1[0-9]}" remotion-project/src/*.tsx
+```
+
+This lesson came from the Storyselling v4→v5 bridge fix (2026-04-01): "STORYSELLING" bridge text was `fontSize={11}` in a 1600-wide viewBox, rendering as an 11px line invisible in any video. Also: bridge span was only 96px in 1600px SVG (6% of canvas). Both fixed in v5.
+
+### 3. ALWAYS Verify Script Before TTS — AND Whisper-Verify After
+Before generating audio, READ the exact text. After generating, run Whisper on the MP3 and compare against the script. Fix any garbled words before embedding in the render.
+
+**Edge TTS Banned Words (en-US-AndrewMultilingualNeural) — confirmed mispronunciations:**
+| Banned | TTS says | Use instead |
+|--------|---------|-------------|
+| Charts / charts | "shots" | Graphs, Data, Numbers |
+| Flawless | "Flownos shaw" | Crisp, Clean, Polished |
+| Sharp (before consonants) | "chart" | Polished, Clean, Clear |
+| Jargon | "cargo" | (avoid) |
+| Buzzwords | garbled | Fluff, Hype, Noise, Nonsense |
+
+Add this to every TTS script's assertion block:
+```python
+BANNED = ['charts','Charts','flawless','Flawless','jargon','Jargon','buzzwords','Buzzwords']
+for w in BANNED: assert w not in TEXT, f"BANNED TTS word: {w}"
+```
 
 ### 4. Edge TTS for Long Text: Use Python Async API
 The `edge-tts` CLI can timeout on long narrations. Use the Python async API: `edge_tts.Communicate(text, voice, rate, pitch).save(path)`.

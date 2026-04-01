@@ -161,12 +161,62 @@ These are additional effects specified in Scott's user preferences that compleme
 
 ---
 
+## 3D Immersive Background Effects (2026 Addition)
+
+These are premium hero/background effects for landing pages, video openers, and presentation slides. Each is described as an AI generation / design prompt that can be passed to Midjourney, DALL-E, a shader tool, or used as direction for a Three.js/WebGL developer.
+
+### When to use 3D backgrounds
+- **Hero sections** of landing pages (above the fold)
+- **Video Hook scenes** (first 5–8 seconds, before the speaker/content appears)
+- **Presentation title slides** and transition cards
+- **Brand identity renders** for social media / thumbnails
+
+### Effect Library
+
+| # | Name | Best For | Prompt / Direction |
+|---|------|----------|-------------------|
+| 1 | **Neon Geometric Space** | Futuristic tech brands, AI products | Vibrant multicolor 3D geometric shapes floating in deep black space, neon rim-lighting, glossy reflective surfaces, soft volumetric glow, high-contrast palette, smooth gradients, cinematic lighting, ultra-sharp detail, futuristic abstract design |
+| 2 | **Rainbow Abstract Objects** | Creative agencies, design portfolios | Abstract 3D spheres, ribbons, and cubes in rainbow neon colors, floating against a pure black background, glowing edges, soft bloom, high-contrast reflections, smooth curvature, immersive depth |
+| 3 | **Neon Wave Flow** | Music, events, energy brands | Flowing neon multicolor 3D waves, liquid motion, smooth undulating surface, glowing edges, holographic gradients, vibrant rainbow colors, deep black background, high-contrast lighting, fluid abstract energy |
+| 4 | **Psychedelic Holographic Wave** | Bold consumer brands, NFT/Web3 | Psychedelic holographic wave surface, shimmering multicolor reflections, smooth fluid motion, neon glow, black void background, ultra-vibrant palette, dynamic curvature |
+| 5 | **Holographic Liquid Metal** | Luxury tech, premium SaaS | Holographic liquid-metal waves in vibrant shifting colors, chrome-like reflections, iridescent highlights, smooth flowing motion, deep black background, high-contrast neon glow, surreal futuristic texture |
+| 6 | **Playful Multicolor 3D** | Education, youth brands, SaaS onboarding | Playful multicolor 3D shapes with bold lighting, smooth motion blur, vibrant neon palette, glossy surfaces, floating abstract forms, deep black background, high-contrast composition, energetic modern design |
+| 7 | **Dynamic Abstract Scene** | Corporate innovation, keynotes | Dynamic 3D abstract scene with bright saturated colors, soft shadows, glowing accents, smooth curved shapes, black negative space, crisp high-contrast rendering |
+| 8 | **WebGL Shader Wave** | Developer tools, technical products | Real-time WebGL shader aesthetic, flowing multicolor wave mesh, neon gradients, emissive glow, black background, smooth vertex displacement, high-contrast lighting, futuristic digital energy |
+| 9 | **Rainbow Wireframe Field** | Data visualization, analytics products | Interactive 3D wave field, rainbow spectral colors, glowing wireframe, soft bloom, deep black void, fluid procedural motion, high-definition abstract simulation |
+| 10 | **Cinematic Hero Waves** | Video production, marketing agencies | Hero-section concept art of multicolor 3D waves, neon glow, smooth flowing geometry, black background, immersive depth, cinematic lighting, futuristic UI aesthetic |
+| 11 | **Modern Landing Background** | General SaaS, startups | Abstract 3D landing page background with vibrant flowing waves, holographic gradients, glowing edges, deep black backdrop, ultra-modern design |
+
+### Implementation Options
+
+**For Remotion video compositions:**
+- Render these as SVG animations (ParticleField variant) with sinusoidal wave displacement
+- Use `DynamicHueShift` + animated radial gradients for the holographic/wave aesthetic
+- Layer `NoiseOverlay` (opacity 0.03–0.05) over any 3D background for cinematic texture
+- Recommended: animate vertex-like dots with connecting lines + color pulse cycle
+
+**For web/landing pages:**
+- Three.js / React Three Fiber: vertex-displaced plane geometry + ShaderMaterial with neon uniforms
+- CSS-only approximation: layered `radial-gradient` + `conic-gradient` + `animation: hue-rotate(360deg)` over 8s
+- Spline.design: import any of these as a prompt and export as embed code
+
+**Palette for 3D effects (dark brand variant):**
+```
+Background: #000000 (pure black void)
+Primary glow: multicolor spectrum — rotate hue over time
+Rim light: neon cyan, magenta, gold at 60–80% opacity
+Bloom: spread-radius 30–80px, opacity 0.3–0.6
+```
+
+---
+
 ## How to Use This Skill
 
 When designing or building any visual element:
 
 1. **Start with the "Why"** — Pick an effect based on its persuasive purpose, not just aesthetics
 2. **Match the palette** — Use Scott's established color system (#0a0e1a bg, cyan/gold/orange accents)
-3. **Layer thoughtfully** — Combine a background effect (Mesh Gradient, Particles) + a content effect (Glassmorphism, Spring Modal) + a text effect (Kinetic Text, Typewriter)
+3. **Layer thoughtfully** — Combine a background effect (Mesh Gradient, Particles, 3D Wave) + a content effect (Glassmorphism, Spring Modal) + a text effect (Kinetic Text, Typewriter)
 4. **Performance first** — CSS animations > JS animations > Canvas > WebGL. Only escalate when simpler approaches can't achieve the effect
 5. **Remotion warning** — When implementing in Remotion video compositions, NEVER use WebkitBackgroundClip, WebkitTextFillColor, or CSS gradient-clip. These render as solid color bars in headless Chrome.
+6. **3D backgrounds for openers** — When building a Hook scene, always consider one of the 3D Immersive Background Effects above as the opening 5–8 seconds before transitioning to the main visual layout.

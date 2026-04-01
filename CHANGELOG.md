@@ -1,5 +1,116 @@
 # Changelog
 
+---
+
+## [Storyselling v6] 2026-04-01 — Full Audio Mispronunciation Scan + Fix
+
+**Output:** `output/storyselling-ai-v6-final.mp4` (28MB, 3:14)
+**Files:** `scripts/generate_storyselling_tts.py`
+
+### Changes
+Full Whisper scan of the entire audio revealed **3 confirmed mispronunciations** by Edge TTS:
+
+| Time (final) | Script word | TTS said | Fixed to |
+|---|---|---|---|
+| ~0:28 | "Charts." (hook) | "shots" | **Graphs** |
+| ~0:59 | "Crisp charts." | "crisp shots" | **Polished slides** |
+| ~1:21 | "No jargon." | "no cargo" | **No fluff** |
+
+### Root cause
+Edge TTS `en-US-AndrewMultilingualNeural` has confirmed trouble with:
+- "Charts" → garbles the "ch" cluster as "sh" → says "shots"
+- "Jargon" → mispronounces initial "j+ar" → says "cargo"
+- "Buzzwords" → garbles compound → multi-syllable noise
+- "Flawless" → mispronounces → "Flownos shaw"
+
+### Lessons saved
+- **CLAUDE.md Rule 3 updated:** Run Whisper AFTER generating TTS, compare against script, fix before render
+- **`feedback_remotion_rules.md`:** Full banned-words table with safe replacements
+- **`feedback_first_draft_excellence.md` Phase 1.2a:** Banned word scan added as mandatory pre-TTS step
+- **`generate_storyselling_tts.py`:** 9 assertion guards now prevent any banned word from reaching TTS
+
+---
+
+## [Storyselling v5] 2026-04-01 — Bridge Rebuild + Audio Fix
+
+**Output:** `output/storyselling-ai-v5-final.mp4` (28MB, 3:14)
+**Files:** `src/StorysellingVideo.tsx`, `scripts/generate_storyselling_tts.py`
+
+### Changes
+- **Bridge graphic rebuilt** (`WinterSpringLandscape`):
+  - Span: 96px → 360px (22% of 1600px canvas — was 6%, visually invisible)
+  - `STORYSELLING` text: `fontSize={11}` → `fontSize={42}`, color `#F5A623` gold with double feDropShadow glow filter
+  - Added `"THE BRIDGE"` subtitle, fontSize=18, white, letterSpacing=4
+  - Full suspension bridge: gold towers slide up → catenary arc cables draw in via `strokeDashoffset` (pathLength=1) → white suspenders appear → gold planks drop sequentially → text rises with CSS `translateY`
+  - Animation trigger: localFrame 300 (when "bridge of stories" narrated, ~10s into APP scene)
+  - `overflow="visible"` on SVG to prevent filter clipping
+- **TTS audio fix:** "Flawless charts" → "Crisp charts" (Edge TTS mispronounced "Flawless" as "Flownos shaw")
+  - New audio: 147.19s (was 147.8s), 862KB
+
+### Lessons saved to memory
+- **CLAUDE.md Rule 2b (NEW):** SVG `fontSize` must yield ≥ 20 screen pixels — calculate `fontSize / viewBoxWidth × renderedWidth`. `fontSize=11` in 1600-wide viewBox = 11px on screen (illegible).
+- **Pre-render Check #4b (NEW):** SVG Internal Font Size Audit + graphic span-width audit (≥20% of viewBox). Grep command: `grep -n "fontSize={[0-9]\b\|fontSize={1[0-9]}" src/*.tsx`
+- **Postmortem table updated:** 3 new rows — microscopic SVG text, invisible bridge span, TTS mispronunciation
+
+---
+
+## [Storyselling v4] 2026-03-31 — Real QR Code + Clickable CTA
+
+**Output:** `output/storyselling-ai-v4-final.mp4` (28MB, 3:15)
+**Files:** `src/StorysellingVideo.tsx`, `remotion/Root.tsx`, `public/qr-60sec-quiz.png`
+
+### Changes
+- Real scannable QR code generated via Python `qrcode` library (green on white, RoundedModuleDrawer) — replaced placeholder SVG
+- CTA button wrapped in `<a href="https://60-second-ai-quiz.netlify.app/">` for Player embed clickability
+- `StoryselllingCTAOnlyComp` composition added (680 frames, `Audio startFrom={3770}`) — enabled partial re-render of CTA only (~2 min vs 20 min full render)
+
+---
+
+## [Storyselling v3] 2026-03-31 — Babson Removed + Scale Overflow Fixed
+
+**Output:** `output/storyselling-ai-v3-final.mp4` (27MB, 3:14)
+**Files:** `src/StorysellingVideo.tsx`
+
+### Changes
+- Removed all "Babson College" references — replaced with "Connection · Story · Impact"
+- BalanceScale SVG: viewBox extended from `0 0 500 280` → `0 0 500 340`, `overflow="visible"` added, tilt reduced 18°→10°, pan labels raised to y=65
+- Content card: `justifyContent: 'center'` → `'flex-end'` with paddingBottom=60
+
+---
+
+## [Storyselling v2] 2026-03-31 — 2× Sizing + Polish Pass
+
+**Output:** `output/storyselling-ai-v2-final.mp4` (27MB, 3:14)
+**Files:** `src/StorysellingVideo.tsx`, `src/components/IntroScene.tsx`
+
+### Changes
+- All credential cards, icons, SVGs scaled to 2× baseline
+- Cards: 1100px wide, titles 80–96px, subtitles 32–44px
+- Hook scene: 4-segment left-panel rotation (data wall → pull quote → bold stat → title card), 18-frame crossfades
+- Balance scale moved to top-center
+- CTA: concentric rings, shimmer headline, bouncing arrow, pulsing glow box
+
+---
+
+## [Storyselling v1] 2026-03-31 — Initial Build
+
+**Output:** `output/storyselling-ai-final.mp4` (35MB, 3:16)
+
+### What was built
+- Full 4-scene video: Hook → Story Arc → Application → CTA
+- Green #005A3B / white / black brand palette (NOT default navy)
+- Edge TTS voiceover (`en-US-AndrewMultilingualNeural`), Whisper timestamps
+- WinterSpringLandscape, BalanceScale, QRCodeGraphic, FinancialDataWall SVG components
+- HeyGen Storyselling intro/outro with green-palette IntroScene/OutroScene
+
+### Issues found in v1 review (→ all fixed in v2–v5)
+- Graphics 50% too small, scale not at top-center (v2)
+- "Babson College" text visible (v3)
+- Fake QR code (v4)
+- Bridge 6% of canvas, fontSize=11, "Flawless" mispronounced (v5)
+
+---
+
 ## 2026-03-31 — Avatar Off-Screen Bug Fix + Fixed Final Video (v3)
 
 ### Bug Fixed
