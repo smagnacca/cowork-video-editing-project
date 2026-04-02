@@ -3,6 +3,7 @@ import { Composition, AbsoluteFill, Audio, staticFile } from 'remotion';
 import { ThreeTypesVideo } from '../src/ThreeTypesVideo';
 import { TemplateVideo } from '../src/TemplateVideo';
 import { StorysellingVideo, StoryselllingCTAOnlyComp } from '../src/StorysellingVideo';
+import { InvisibleSignVideo } from '../src/InvisibleSignVideo';
 import { IntroScene } from '../src/components/IntroScene';
 import { OutroScene } from '../src/components/OutroScene';
 
@@ -110,6 +111,26 @@ const StorysellingOutroComposition: React.FC = () => (
   />
 );
 
+// ─── Invisible Sign intro wrapper ───────────────────────────────────────────
+const InvisibleSignIntroComposition: React.FC = () => (
+  <IntroScene
+    scene={{
+      type: 'intro',
+      avatarSrc: 'avatar/intro-avatar.mp4',
+      hookText: 'EVERY CLIENT WEARS AN INVISIBLE SIGN',
+      hookColor: 'accent1',
+      topicTitle: 'Can You Read It?',
+      topicSubtitle: 'Role · Story · Silence',
+      speakerName: 'Scott Magnacca',
+      speakerTitle: 'AI & Storyselling Strategist',
+      accentColor: 'accent1',
+      timing: { startFrame: 0, endFrame: 728 },
+    }}
+    colors={SS_COLORS}
+    effects={SS_EFFECTS}
+  />
+);
+
 // ─── Default config — loaded from templates/video.config.example.json ─────────
 const defaultTemplateConfig = {
   title: 'Template Video',
@@ -207,6 +228,26 @@ export const RemotionRoot: React.FC = () => {
         id="StorysellingOutroComp"
         component={StorysellingOutroComposition}
         durationInFrames={643}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* ─── Every Client Wears an Invisible Sign — Ch2 ─── */}
+      <Composition
+        id="InvisibleSignVideo"
+        component={InvisibleSignVideo}
+        durationInFrames={4420}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{ audioSrc: 'audio/invisible-sign.mp3' }}
+      />
+
+      <Composition
+        id="InvisibleSignIntroComp"
+        component={InvisibleSignIntroComposition}
+        durationInFrames={728}
         fps={30}
         width={1920}
         height={1080}
