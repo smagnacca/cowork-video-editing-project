@@ -8,48 +8,55 @@ import {
   spring,
   interpolate,
   staticFile,
-  OffthreadVideo,
   Img,
 } from 'remotion';
 import { ParticleField } from './components/ParticleField';
 import { NoiseOverlay } from './components/NoiseOverlay';
-import { KineticText } from './components/KineticText';
 import { BRollPlayer } from './components/BRollPlayer';
 import { TypewriterText } from './components/TypewriterText';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EVERY CLIENT WEARS AN INVISIBLE SIGN
-// Storyselling in the Age of AI — Chapter 2
+// EVERY CLIENT WEARS AN INVISIBLE SIGN — v2
+// Storyselling in the Age of AI · Chapter 2
+// All animation timings derived from Whisper word-level timestamps.
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// ─── Palette: core Storyselling brand + Babson accent colors ─────────────────
 const BRAND = {
-  green: '#005A3B',
-  greenLight: '#00804F',
-  greenDark: '#003D28',
-  white: '#FFFFFF',
-  black: '#000000',
-  bgDark: '#050505',
-  textSecondary: '#b0b0b0',
-  cardBg: 'rgba(0, 90, 59, 0.08)',
-  cardBorder: 'rgba(0, 90, 59, 0.30)',
-  greenGlow: 'rgba(0, 90, 59, 0.5)',
-  gold: '#F5A623',
+  // Core
+  green:        '#005A3B',
+  greenLight:   '#00804F',
+  greenDark:    '#003D28',
+  white:        '#FFFFFF',
+  black:        '#000000',
+  bgDark:       '#050505',
+  textSecondary:'#b0b0b0',
+  cardBg:       'rgba(0, 90, 59, 0.08)',
+  cardBorder:   'rgba(0, 90, 59, 0.30)',
+  // Babson emphasis palette — used for sparkle, color-wave, key word highlights
+  brightGold:   '#DDD055',  // Babson Bright Gold — primary sparkle/emphasis
+  mangoPunch:   '#EEAF00',  // Babson Mango Punch — warm secondary emphasis
+  ochre:        '#AD9001',  // Babson Ochre — muted gold accent
+  peacockBlue:  '#54818B',  // Babson Peacock Blue — cool accent
+  sherwoodGrn:  '#9EB28F',  // Babson Sherwood Green — subtle secondary text
+  summerNights: '#005172',  // Babson Summer Nights — deep blue punch
 };
 
-// ─── Scene frame boundaries (from Whisper timestamps × 30fps) ────────────────
+// ─── Scene boundaries — all derived from Whisper × 30fps ─────────────────────
+// Audio: 147.048s → 4412 frames. Buffer to 4420.
 const SCENE = {
-  HOOK_START:    0,
-  HOOK_END:      840,    // ~28s — "He read the invisible sign" at f811 + buffer
-  S1_START:      840,
-  S1_END:        2050,   // ~68s — ends before "Here's the question"
-  S2_START:      2050,
-  S2_END:        2700,   // ~90s — "What are you most proud of" + identity reveal
-  S3_START:      2700,
-  S3_END:        3280,   // ~109s — "Silence is truth serum" + technique
-  STORY_START:   3280,
-  STORY_END:     4100,   // ~136s — Maya story complete
-  CTA_START:     4100,
-  CTA_END:       4420,   // 147.048s × 30 = 4411 + 9f buffer
+  HOOK_START:   0,
+  HOOK_END:     840,    // "He read the invisible sign" at f811
+  S1_START:     840,
+  S1_END:       2050,   // "Here's the question" at f2028
+  S2_START:     2050,
+  S2_END:       2700,   // "the hardest" at f2682
+  S3_START:     2700,
+  S3_END:       3280,   // "matter most" at f3276
+  STORY_START:  3280,
+  STORY_END:    4100,   // "Every client" at f4077
+  CTA_START:    4100,
+  CTA_END:      4420,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -57,103 +64,165 @@ const phaseOpacity = (frame: number, enter: number, exit: number, fade = 18): nu
   if (frame < enter || frame > exit) return 0;
   return Math.min(Math.min(1, (frame - enter) / fade), Math.min(1, (exit - frame) / fade));
 };
-
-const sineGlow = (frame: number, speed = 0.05, min = 0.5, max = 1.0) =>
+const sineVal = (frame: number, speed = 0.05, min = 0.5, max = 1.0) =>
   min + (max - min) * (0.5 + 0.5 * Math.sin(frame * speed));
 
-// ─── Reusable: Scene background ───────────────────────────────────────────────
-const SceneBg: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
-  <AbsoluteFill style={{ backgroundColor: BRAND.bgDark }}>
-    <AbsoluteFill style={{
-      background: `radial-gradient(ellipse at 20% 50%, ${BRAND.green}08 0%, transparent 60%),
-                   radial-gradient(ellipse at 80% 20%, ${BRAND.greenDark}10 0%, transparent 50%),
-                   ${BRAND.bgDark}`,
-    }} />
-    {children}
-  </AbsoluteFill>
-);
-
-// ─── Reusable: Left/Right split wrapper ──────────────────────────────────────
-const SplitLayout: React.FC<{
-  left: React.ReactNode;
-  right: React.ReactNode;
-  shifted?: boolean;  // card shifted left when B-roll active
-}> = ({ left, right, shifted = false }) => {
+// ─── SparkleGold — Babson bright gold word with layered sparkle burst ─────────
+// Use on KEY insight words: "INVISIBLE", "PROUD", "TRUTH", win moments
+const SparkleGold: React.FC<{
+  text: string; fontSize?: number; startFrame?: number;
+  letterSpacing?: number; textTransform?: 'uppercase' | 'none';
+}> = ({ text, fontSize = 80, startFrame = 0, letterSpacing = 3, textTransform = 'uppercase' }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const lf = Math.max(0, frame - startFrame);
+  const ent = spring({ frame: lf, fps, config: { damping: 9, stiffness: 115 } });
+  // Burst on entrance, then a gentle pulse
+  const burst = lf < 24
+    ? interpolate(lf, [0, 6, 24], [4.0, 6.5, 1.0], { extrapolateRight: 'clamp' })
+    : 1.0 + 0.10 * Math.sin(lf * 0.08);
   return (
-    <>
-      {/* Left content panel */}
-      <div style={{
-        position: 'absolute', left: 0, top: 0, width: 960, height: 1080,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '0 50px',
-        transform: shifted ? 'translateX(-120px) scale(0.96)' : 'none',
-        transition: 'transform 0.3s ease',
-      }}>
-        {left}
-      </div>
-      {/* Right content panel */}
-      <div style={{
-        position: 'absolute', right: 0, top: 0, width: 960, height: 1080,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {right}
-      </div>
-      {/* Separator */}
-      <div style={{
-        position: 'absolute', left: 952, top: 0, width: 1, height: 1080,
-        background: `linear-gradient(180deg, transparent, ${BRAND.green}25 30%, ${BRAND.green}25 70%, transparent)`,
-      }} />
-    </>
+    <span style={{
+      fontSize, fontWeight: 900,
+      color: BRAND.brightGold,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      textTransform,
+      letterSpacing,
+      opacity: ent,
+      transform: `scale(${interpolate(ent, [0, 1], [0.4, 1])}) translateY(${interpolate(ent, [0, 1], [22, 0])}px)`,
+      display: 'inline-block',
+      textShadow: [
+        `0 0 ${16 * burst}px ${BRAND.brightGold}`,
+        `0 0 ${35 * burst}px ${BRAND.brightGold}AA`,
+        `0 0 ${65 * burst}px ${BRAND.mangoPunch}80`,
+        `0 0 ${110 * burst}px ${BRAND.mangoPunch}45`,
+      ].join(', '),
+    }}>
+      {text}
+    </span>
   );
 };
 
+// ─── ColorWaveText — Babson palette wave sweeping across characters ───────────
+// Use on section headers and hero phrases for visual interest
+const ColorWaveText: React.FC<{
+  text: string; fontSize?: number; startFrame?: number;
+  speed?: number; fontWeight?: number;
+}> = ({ text, fontSize = 64, startFrame = 0, speed = 0.055, fontWeight = 900 }) => {
+  const frame = useCurrentFrame();
+  const lf = Math.max(0, frame - startFrame);
+  const palette = [BRAND.brightGold, BRAND.mangoPunch, BRAND.white, BRAND.greenLight, BRAND.brightGold];
+  return (
+    <div style={{ display: 'inline-flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+      {text.split('').map((char, i) => {
+        const wave = Math.sin(lf * speed + i * 0.65); // -1 to 1
+        const idx = Math.min(
+          Math.max(Math.floor(((wave + 1) / 2) * (palette.length - 1)), 0),
+          palette.length - 1
+        );
+        const c = palette[idx];
+        return (
+          <span key={i} style={{
+            fontSize, fontWeight,
+            color: c,
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            display: 'inline-block',
+            textShadow: `0 0 ${10 + 8 * ((wave + 1) / 2)}px ${c}80`,
+          }}>
+            {char === ' ' ? '\u00A0' : char}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
+// ─── Reusable scene background with breathing radial gradient ─────────────────
+const SceneBg: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+  const frame = useCurrentFrame();
+  const alpha = Math.round((0.06 + 0.03 * Math.sin(frame * 0.015)) * 255).toString(16).padStart(2, '0');
+  return (
+    <AbsoluteFill style={{ backgroundColor: BRAND.bgDark }}>
+      <AbsoluteFill style={{
+        background: [
+          `radial-gradient(ellipse at 18% 52%, ${BRAND.green}${alpha} 0%, transparent 58%)`,
+          `radial-gradient(ellipse at 82% 22%, ${BRAND.greenDark}12 0%, transparent 48%)`,
+          BRAND.bgDark,
+        ].join(', '),
+      }} />
+      {children}
+    </AbsoluteFill>
+  );
+};
+
+// ─── Scene label strip ─────────────────────────────────────────────────────────
+const SceneLabel: React.FC<{ text: string }> = ({ text }) => (
+  <div style={{
+    position: 'absolute', top: 52, left: '50%', transform: 'translateX(-50%)',
+    fontSize: 15, color: BRAND.green, letterSpacing: 4, textTransform: 'uppercase',
+    fontFamily: 'sans-serif', fontWeight: 700, opacity: 0.65,
+    whiteSpace: 'nowrap',
+  }}>
+    {text}
+  </div>
+);
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// SCENE 1 — HOOK (f0–f840)
+// SCENE 1 — HOOK  (global f0–f840)
+// Whisper key frames (absolute = local since HOOK_START=0):
+//   f178 "I need to think about it"  f339 "In 1977"  f768 "He read"  f800 "invisible"  f811 "sign"
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Phase 1: "I need to think about it" — animated refusal wall
+// Phase 1 (lf 0→335): Refusal wall — "I need to think about it" × 7 accumulated objections
 const RefusalWall: React.FC<{ opacity: number }> = ({ opacity }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const ent = spring({ frame, fps, config: { damping: 20, stiffness: 60 } });
-  const phrases = [
-    'I need to think about it.',
-    'Let me review the numbers.',
-    'I need to think about it.',
-    'Send me more data.',
-    'I need to think about it.',
-    'Not the right time.',
-    'I need to think about it.',
+  const lines = [
+    { text: '"I need to think about it."', bold: true },
+    { text: 'Better data. Better numbers.', bold: false },
+    { text: '"I need to think about it."', bold: true },
+    { text: 'Better returns. Still losing.', bold: false },
+    { text: '"I need to think about it."', bold: true },
+    { text: 'Not the right time.', bold: false },
+    { text: '"I need to think about it."', bold: true },
   ];
   return (
-    <div style={{ opacity: opacity * ent, width: 820, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {phrases.map((p, i) => {
-        const entI = spring({ frame: Math.max(0, frame - i * 8), fps, config: { damping: 18, stiffness: 80 } });
-        const isRefusal = p.includes('think about it');
+    <div style={{
+      opacity, width: 900,
+      display: 'flex', flexDirection: 'column', gap: 18,
+      alignItems: 'flex-start',
+    }}>
+      {lines.map((line, i) => {
+        // Stagger appearances — all visible by f60 so wall feels accumulated
+        const lf = Math.max(0, frame - i * 8);
+        const ent = spring({ frame: lf, fps, config: { damping: 18, stiffness: 85 } });
+        // Pulse the refusal lines after "I need to think about it" spoken at f178
+        const pulse = frame >= 178 && line.bold
+          ? 1.0 + 0.12 * Math.sin((frame - 178) * 0.1 + i)
+          : 1.0;
         return (
           <div key={i} style={{
-            opacity: entI * (isRefusal ? 1 : 0.35),
-            transform: `translateX(${interpolate(entI, [0, 1], [-30, 0])}px)`,
-            fontSize: isRefusal ? 38 : 26,
-            fontWeight: isRefusal ? 800 : 400,
-            color: isRefusal ? BRAND.white : BRAND.textSecondary,
+            opacity: ent * (line.bold ? 1.0 : 0.38),
+            transform: `translateX(${interpolate(ent, [0, 1], [-40, 0])}px)`,
+            fontSize: line.bold ? 44 : 28,
+            fontWeight: line.bold ? 900 : 400,
+            fontStyle: line.bold ? 'normal' : 'italic',
+            color: line.bold ? BRAND.white : BRAND.textSecondary,
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            fontStyle: isRefusal ? 'normal' : 'italic',
-            letterSpacing: isRefusal ? 0.5 : 0,
-            textShadow: isRefusal ? `0 0 30px ${BRAND.green}60` : 'none',
-            borderLeft: isRefusal ? `3px solid ${BRAND.green}` : '3px solid transparent',
-            paddingLeft: 16,
+            borderLeft: line.bold ? `4px solid ${BRAND.brightGold}` : '4px solid transparent',
+            paddingLeft: 20,
+            textShadow: line.bold
+              ? `0 0 ${20 * pulse}px ${BRAND.brightGold}50`
+              : 'none',
           }}>
-            {p}
+            {line.text}
           </div>
         );
       })}
       <div style={{
-        marginTop: 18,
-        fontSize: 20, color: BRAND.textSecondary, fontFamily: 'sans-serif',
-        letterSpacing: 3, textTransform: 'uppercase', opacity: 0.6,
+        marginTop: 12,
+        fontSize: 18, color: BRAND.textSecondary, fontFamily: 'sans-serif',
+        letterSpacing: 3, textTransform: 'uppercase', opacity: 0.55,
       }}>
         Six months. Same answer. Still losing.
       </div>
@@ -161,89 +230,108 @@ const RefusalWall: React.FC<{ opacity: number }> = ({ opacity }) => {
   );
 };
 
-// Phase 2: George Lucas pull quote
+// Phase 2 (lf 315→770): George Lucas quote — appears exactly when spoken (f339)
 const LucasQuote: React.FC<{ opacity: number }> = ({ opacity }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const ent = spring({ frame: Math.max(0, frame - 160), fps, config: { damping: 16, stiffness: 65 } });
-  const glow = sineGlow(frame, 0.04, 0.7, 1.0);
+  // Card enters at f339 (when "In 1977 George Lucas" begins)
+  const ent = spring({ frame: Math.max(0, frame - 339), fps, config: { damping: 16, stiffness: 60 } });
+  // "He read the invisible sign." text appears at f768 when spoken
+  const showKeyline = frame >= 768
+    ? Math.min(1, (frame - 768) / 14)
+    : 0;
+
   return (
     <div style={{
       opacity: opacity * ent,
-      transform: `translateY(${interpolate(ent, [0, 1], [24, 0])}px)`,
-      maxWidth: 820, display: 'flex', flexDirection: 'column', gap: 20,
+      transform: `translateY(${interpolate(ent, [0, 1], [28, 0])}px)`,
+      maxWidth: 960, display: 'flex', flexDirection: 'column', gap: 22,
     }}>
-      {/* Giant quote mark */}
+      {/* Decorative quote mark */}
       <div style={{
-        fontSize: 140, color: BRAND.green, fontFamily: 'Georgia, serif',
-        lineHeight: 0.7, opacity: 0.4, marginBottom: -10,
+        fontSize: 160, color: BRAND.brightGold, fontFamily: 'Georgia, serif',
+        lineHeight: 0.7, opacity: 0.22, marginBottom: -12,
       }}>"</div>
+      {/* Main quote */}
       <div style={{
-        fontSize: 40, fontWeight: 700, color: BRAND.white,
+        fontSize: 46, fontWeight: 700, color: BRAND.white,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         lineHeight: 1.35, fontStyle: 'italic',
-        textShadow: `0 0 40px rgba(255,255,255,0.15)`,
       }}>
-        George Lucas sold the Star Wars film rights for $150,000.<br />
-        He kept the merchandise rights.
+        George Lucas sold the Star Wars film rights<br />
+        for $150,000. He kept the merchandise rights.
       </div>
       <div style={{
-        fontSize: 28, fontWeight: 400, color: BRAND.textSecondary,
+        fontSize: 30, fontWeight: 400, color: BRAND.textSecondary,
         fontFamily: 'sans-serif', fontStyle: 'italic', lineHeight: 1.4,
       }}>
         Nobody thought toys mattered. Lucas did.
       </div>
+      {/* Accent rule — draws in */}
       <div style={{
-        height: 3, width: interpolate(Math.min(1, (frame - 200) / 40), [0, 1], [0, 280]),
-        background: `linear-gradient(90deg, ${BRAND.green}, transparent)`,
-        marginTop: 4,
+        height: 3,
+        width: interpolate(Math.min(1, Math.max(0, (frame - 370) / 40)), [0, 1], [0, 320]),
+        background: `linear-gradient(90deg, ${BRAND.brightGold}, transparent)`,
       }} />
-      <div style={{
-        fontSize: 18, color: BRAND.green, letterSpacing: 3, textTransform: 'uppercase',
-        fontFamily: 'sans-serif', fontWeight: 700,
-        textShadow: `0 0 ${20 * glow}px ${BRAND.green}`,
-        opacity: frame > 220 ? 1 : 0,
-      }}>
-        He read the invisible sign.
+      {/* Key line — appears at f768 when spoken */}
+      <div style={{ opacity: showKeyline }}>
+        <ColorWaveText
+          text="He read the invisible sign."
+          fontSize={44}
+          startFrame={768}
+          speed={0.04}
+          fontWeight={900}
+        />
       </div>
     </div>
   );
 };
 
-// Phase 3: Kinetic headline slam
+// Phase 3 (lf 750→825): "THE INVISIBLE SIGN" — word slam at exact Whisper frames
+// THE at f768, INVISIBLE at f800, SIGN at f811
 const InvisibleSignSlam: React.FC<{ opacity: number }> = ({ opacity }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const words = ['THE', 'INVISIBLE', 'SIGN'];
+  // Exact Whisper frames for each word
+  const wordDefs = [
+    { text: 'THE',       whisperFrame: 768, size: 80,  color: BRAND.white },
+    { text: 'INVISIBLE', whisperFrame: 800, size: 130, color: BRAND.brightGold },
+    { text: 'SIGN',      whisperFrame: 811, size: 80,  color: BRAND.white },
+  ];
   return (
     <div style={{
-      opacity, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+      opacity, display: 'flex', flexDirection: 'column',
+      alignItems: 'center', gap: 10,
     }}>
       <div style={{
-        fontSize: 22, color: BRAND.textSecondary, letterSpacing: 4,
+        fontSize: 20, color: BRAND.textSecondary, letterSpacing: 4,
         textTransform: 'uppercase', fontFamily: 'sans-serif', marginBottom: 4,
       }}>
         He read
       </div>
-      {words.map((word, i) => {
-        const wf = Math.max(0, frame - (420 + i * 14));
-        const ent = spring({ frame: wf, fps, config: { damping: 10, stiffness: 120 } });
-        const glow = wf < 12
-          ? interpolate(wf, [0, 5, 12], [2.5, 4.0, 1.0], { extrapolateRight: 'clamp' })
-          : 1.0;
-        const sizes = [72, 120, 72];
+      {wordDefs.map((w, i) => {
+        const wf = Math.max(0, frame - w.whisperFrame);
+        const ent = spring({ frame: wf, fps, config: { damping: 9, stiffness: 120 } });
+        const burst = wf < 20
+          ? interpolate(wf, [0, 5, 20], [4.0, 6.0, 1.0], { extrapolateRight: 'clamp' })
+          : 1.0 + 0.08 * Math.sin(wf * 0.07);
         return (
           <div key={i} style={{
-            fontSize: sizes[i], fontWeight: 900, color: i === 1 ? BRAND.green : BRAND.white,
+            fontSize: w.size, fontWeight: 900,
+            color: w.color,
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            textTransform: 'uppercase', letterSpacing: i === 1 ? 6 : 3,
+            textTransform: 'uppercase', letterSpacing: w.size > 100 ? 8 : 4,
             opacity: ent,
-            transform: `scale(${interpolate(ent, [0, 1], [0.4, 1])}) translateY(${interpolate(ent, [0, 1], [30, 0])}px)`,
-            textShadow: i === 1
-              ? `0 0 ${30 * glow}px ${BRAND.green}, 0 0 ${60 * glow}px ${BRAND.green}70`
-              : `0 0 ${20 * glow}px rgba(255,255,255,0.5)`,
+            transform: `scale(${interpolate(ent, [0, 1], [0.3, 1])}) translateY(${interpolate(ent, [0, 1], [30, 0])}px)`,
+            textShadow: w.color === BRAND.brightGold
+              ? [
+                  `0 0 ${28 * burst}px ${BRAND.brightGold}`,
+                  `0 0 ${55 * burst}px ${BRAND.brightGold}AA`,
+                  `0 0 ${100 * burst}px ${BRAND.mangoPunch}70`,
+                ].join(', ')
+              : `0 0 ${22 * burst}px rgba(255,255,255,0.45)`,
           }}>
-            {word}
+            {w.text}
           </div>
         );
       })}
@@ -251,38 +339,38 @@ const InvisibleSignSlam: React.FC<{ opacity: number }> = ({ opacity }) => {
   );
 };
 
-// Phase 4: Title card
+// Phase 4 (lf 800→840): Title reveal at end of hook
 const TitleCard: React.FC<{ opacity: number }> = ({ opacity }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const ent = spring({ frame: Math.max(0, frame - 660), fps, config: { damping: 16, stiffness: 65 } });
-  const glow = sineGlow(frame, 0.04, 0.6, 1.0);
+  const ent = spring({ frame: Math.max(0, frame - 800), fps, config: { damping: 16, stiffness: 65 } });
+  const glow = sineVal(frame, 0.04, 0.6, 1.0);
   return (
     <div style={{
       opacity: opacity * ent,
       transform: `translateY(${interpolate(ent, [0, 1], [20, 0])}px)`,
-      display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 16, maxWidth: 820,
+      display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 16, maxWidth: 900,
     }}>
       <div style={{
-        fontSize: 16, color: BRAND.green, letterSpacing: 4, textTransform: 'uppercase',
+        fontSize: 15, color: BRAND.green, letterSpacing: 4, textTransform: 'uppercase',
         fontFamily: 'sans-serif', fontWeight: 700,
       }}>
         Storyselling in the Age of AI · Chapter 2
       </div>
       <div style={{
-        height: 3, width: 120,
-        background: `linear-gradient(90deg, ${BRAND.green}, transparent)`,
+        height: 3, width: 100,
+        background: `linear-gradient(90deg, ${BRAND.brightGold}, transparent)`,
       }} />
       <div style={{
         fontSize: 72, fontWeight: 900, color: BRAND.white,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         lineHeight: 1.1, letterSpacing: -1,
-        textShadow: `0 0 ${40 * glow}px rgba(255,255,255,0.1)`,
+        textShadow: `0 0 ${40 * glow}px rgba(255,255,255,0.08)`,
       }}>
         Every Client Wears an Invisible Sign
       </div>
       <div style={{
-        fontSize: 30, color: BRAND.textSecondary,
+        fontSize: 32, color: BRAND.textSecondary,
         fontFamily: 'sans-serif', fontStyle: 'italic',
       }}>
         Can you read it?
@@ -291,127 +379,114 @@ const TitleCard: React.FC<{ opacity: number }> = ({ opacity }) => {
   );
 };
 
-const HookScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame, duration }) => {
-  const op1 = phaseOpacity(localFrame, 0, 175, 20);
-  const op2 = phaseOpacity(localFrame, 155, 420, 20);
-  const op3 = phaseOpacity(localFrame, 400, 665, 20);
-  const op4 = phaseOpacity(localFrame, 645, duration, 20);
-  const brollActive = localFrame > 160 && localFrame < 660;
-  const shiftProgress = spring({
-    frame: Math.max(0, brollActive ? localFrame - 160 : -(localFrame - 660)),
-    fps: 30,
-    config: { damping: 20, stiffness: 80 },
-  });
+const HookScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame: lf, duration }) => {
+  // All phases: FULL WIDTH — maximum cinematic impact, no B-roll split
+  // Phase timings match Whisper audio events:
+  //   lf 0→335:   Refusal wall (narration f0–f313 "still losing")
+  //   lf 315→770: Lucas quote  (narration f339 "In 1977 George Lucas")
+  //   lf 750→825: Slam         (narration f768 "He read the invisible sign")
+  //   lf 800→840: Title card   (transitions into scene 1)
+  const op1 = phaseOpacity(lf, 0,   335, 22);
+  const op2 = phaseOpacity(lf, 315, 770, 22);
+  const op3 = phaseOpacity(lf, 750, 825, 18);
+  const op4 = phaseOpacity(lf, 800, duration, 16);
 
   return (
     <SceneBg>
       <ParticleField color={BRAND.green} count={22} seed={42} intensity={0.6} />
+      {/* Full-width centered content panel */}
       <div style={{
-        position: 'absolute', top: 60, left: '50%', transform: 'translateX(-50%)',
-        fontSize: 16, color: BRAND.green, letterSpacing: 4, textTransform: 'uppercase',
-        fontFamily: 'sans-serif', opacity: 0.6, fontWeight: 600,
-      }}>
-        The Question That Changed Everything
-      </div>
-
-      {/* Left panel */}
-      <div style={{
-        position: 'absolute', left: 0, top: 0, width: 960, height: 1080,
+        position: 'absolute', left: 0, top: 0, width: 1920, height: 1080,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '0 60px',
-        transform: brollActive
-          ? `translateX(${interpolate(shiftProgress, [0,1], [0, -80])}px) scale(${interpolate(shiftProgress, [0,1], [1, 0.96])})`
-          : 'none',
+        padding: '100px 160px 0',
       }}>
         {op1 > 0.01 && <div style={{ position: 'absolute' }}><RefusalWall opacity={op1} /></div>}
         {op2 > 0.01 && <div style={{ position: 'absolute' }}><LucasQuote opacity={op2} /></div>}
         {op3 > 0.01 && <div style={{ position: 'absolute' }}><InvisibleSignSlam opacity={op3} /></div>}
         {op4 > 0.01 && <div style={{ position: 'absolute' }}><TitleCard opacity={op4} /></div>}
       </div>
-
-      {/* Right panel — B-roll for middle phases */}
-      {brollActive && (
-        <div style={{
-          position: 'absolute', right: 60, top: '50%', transform: 'translateY(-50%)',
-          opacity: phaseOpacity(localFrame, 160, 660, 25),
-        }}>
-          <BRollPlayer
-            src="conference.mp4"
-            width={720} height={405}
-            accentColor={BRAND.green}
-            caption="The same pitch. The same answer."
-          />
-        </div>
-      )}
-
-      {/* Vertical separator */}
-      <div style={{
-        position: 'absolute', left: 952, top: 0, width: 1, height: 1080,
-        background: `linear-gradient(180deg, transparent, ${BRAND.green}25 30%, ${BRAND.green}25 70%, transparent)`,
-      }} />
       <NoiseOverlay opacity={0.04} />
     </SceneBg>
   );
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SCENE 2 — THE THREE SIGNS (f840–f2050)
+// SCENE 2 — THE THREE ARCHETYPES  (global f840–f2050)
+// All local = absolute − 840
+// Key whisper frames (local):
+//   lf27:  "every person walks into a room"
+//   lf304: "safe" · lf332: "valued" · lf361: "ready"
+//   lf407: "three primary signs"
+//   lf466: "The builder"      lf652: "The protector"    lf828: "The achiever"
+//   lf1017: "Most advisors"   lf1151: "I need to think about it"
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Sign graphic — the "invisible sign" visualization
-// viewBox="0 0 780 460" rendered at ~780px wide
-// fontSize checks: 42 / 780 × 780 = 42px ✓, 28 → 28px ✓
-const SignGraphic: React.FC<{
-  label: string; subtext: string; icon: string;
-  color: string; startFrame: number; opacity: number;
-}> = ({ label, subtext, icon, color, startFrame, opacity }) => {
+// Hanging sign graphic — swings in on entrance, glows on accent color
+const ArchetypeSign: React.FC<{
+  label: string; subtext: string; icon: string; color: string; whisperFrame: number; opacity: number;
+}> = ({ label, subtext, icon, color, whisperFrame, opacity }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const lf = Math.max(0, frame - startFrame);
-  const ent = spring({ frame: lf, fps, config: { damping: 14, stiffness: 70 } });
-  const glow = sineGlow(frame, 0.06, 0.6, 1.0);
-  const signSwing = interpolate(lf, [0, 30, 50, 70], [0, -3, 2, 0], { extrapolateRight: 'clamp' });
+  const lf = Math.max(0, frame - whisperFrame);
+  const ent = spring({ frame: lf, fps, config: { damping: 13, stiffness: 65 } });
+  const swing = interpolate(lf, [0, 30, 55, 80], [0, -4, 2, 0], { extrapolateRight: 'clamp' });
+  const glow = sineVal(frame, 0.055, 0.55, 1.0);
+  const isGold = color === BRAND.brightGold;
 
   return (
     <div style={{
       opacity: opacity * ent,
-      transform: `scale(${interpolate(ent, [0, 1], [0.85, 1])}) translateY(${interpolate(ent, [0, 1], [30, 0])}px)`,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
+      transform: `scale(${interpolate(ent, [0, 1], [0.80, 1])}) translateY(${interpolate(ent, [0, 1], [40, 0])}px)`,
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
     }}>
-      {/* Sign chain */}
-      <div style={{ display: 'flex', gap: 60 }}>
+      {/* Chains */}
+      <div style={{ display: 'flex', gap: 56, marginBottom: -2 }}>
         {[0, 1].map(i => (
-          <div key={i} style={{ width: 3, height: 40, background: `${color}60`, marginBottom: -2 }} />
+          <div key={i} style={{
+            width: 3, height: 44, background: `${color}55`,
+            borderRadius: 2,
+            opacity: interpolate(lf, [0, 25], [0, 1], { extrapolateRight: 'clamp' }),
+          }} />
         ))}
       </div>
       {/* Sign board */}
       <div style={{
-        transform: `rotate(${signSwing}deg)`,
-        background: `linear-gradient(135deg, rgba(0,0,0,0.95), rgba(20,20,20,0.98))`,
+        transform: `rotate(${swing}deg)`,
+        background: 'rgba(8,8,8,0.96)',
         border: `2px solid ${color}`,
-        borderRadius: 12,
-        padding: '28px 40px',
-        width: 680,
-        boxShadow: `0 0 ${30 * glow}px ${color}40, 0 0 ${60 * glow}px ${color}20, inset 0 1px 0 rgba(255,255,255,0.05)`,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+        borderRadius: 14,
+        padding: '32px 52px',
+        width: 720,
+        boxShadow: [
+          `0 0 ${28 * glow}px ${color}45`,
+          `0 0 ${55 * glow}px ${color}22`,
+          'inset 0 1px 0 rgba(255,255,255,0.04)',
+          '0 12px 40px rgba(0,0,0,0.5)',
+        ].join(', '),
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
       }}>
-        <div style={{ fontSize: 64 }}>{icon}</div>
-        <div style={{
-          fontSize: 42, fontWeight: 900, color, textTransform: 'uppercase',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          letterSpacing: 3, textAlign: 'center',
-          textShadow: `0 0 ${20 * glow}px ${color}90`,
-        }}>
-          {label}
-        </div>
+        <div style={{ fontSize: 68 }}>{icon}</div>
+        {/* Label: use SparkleGold for achiever (gold), regular for others */}
+        {isGold ? (
+          <SparkleGold text={label} fontSize={48} startFrame={whisperFrame} letterSpacing={4} />
+        ) : (
+          <div style={{
+            fontSize: 48, fontWeight: 900, color,
+            fontFamily: '-apple-system, sans-serif', textTransform: 'uppercase',
+            letterSpacing: 4, textAlign: 'center',
+            textShadow: `0 0 ${18 * glow}px ${color}90`,
+          }}>
+            {label}
+          </div>
+        )}
         <div style={{
           height: 2, width: 200,
           background: `linear-gradient(90deg, transparent, ${color}, transparent)`,
         }} />
         <div style={{
-          fontSize: 28, fontWeight: 600, color: BRAND.white,
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          textAlign: 'center', lineHeight: 1.3, opacity: 0.9,
+          fontSize: 30, fontWeight: 600, color: BRAND.white,
+          fontFamily: '-apple-system, sans-serif', textAlign: 'center',
+          lineHeight: 1.3, fontStyle: 'italic', opacity: 0.92,
         }}>
           "{subtext}"
         </div>
@@ -420,80 +495,78 @@ const SignGraphic: React.FC<{
   );
 };
 
-const ThreeSignsScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame, duration }) => {
-  // Whisper-timed triggers (relative to scene start f840)
-  // f1306 "The builder" → local f466
-  // f1492 "The protector" → local f652
-  // f1668 "The achiever" → local f828
-  // f1857 "Most advisors pitch" → local f1017
-  const lf = localFrame;
+const ThreeSignsScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame: lf, duration }) => {
+  // Phase timings — all match Whisper local frames for S1 (abs - 840):
+  //   opIntro   lf 0→450    role theory (narration lf27–lf407)
+  //   opBuilder lf 430→680  builder sign (narration lf466)
+  //   opProt    lf 640→860  protector sign (narration lf652)
+  //   opAchiev  lf 835→1040 achiever sign (narration lf828)
+  //   opSynth   lf 1000→end synthesis "most advisors pitch" (narration lf1017)
+  const opIntro   = phaseOpacity(lf, 0,    450,  22);
+  const opBuilder = phaseOpacity(lf, 430,  680,  22);
+  const opProt    = phaseOpacity(lf, 640,  860,  22);
+  const opAchiev  = phaseOpacity(lf, 835,  1040, 22);
+  const opSynth   = phaseOpacity(lf, 1000, duration, 22);
 
-  const opIntro   = phaseOpacity(lf, 0, 480, 20);
-  const opBuilder = phaseOpacity(lf, 440, 700, 20);
-  const opProt    = phaseOpacity(lf, 650, 900, 20);
-  const opAchiev  = phaseOpacity(lf, 860, 1100, 20);
-  const opSynth   = phaseOpacity(lf, 1010, duration, 20);
-
-  const brollActive = lf > 650 && lf < 1100;
+  const brollSynth = lf > 1000;
 
   return (
     <SceneBg>
       <ParticleField color={BRAND.green} count={18} seed={7} intensity={0.5} />
+      <SceneLabel text="Secret #1 — Read the Invisible Sign" />
 
-      {/* Kinetic label — top */}
+      {/* Content — full width for sign phases, left panel for synthesis + B-roll */}
       <div style={{
-        position: 'absolute', top: 55, left: '50%', transform: 'translateX(-50%)',
-        fontSize: 16, color: BRAND.green, letterSpacing: 4, textTransform: 'uppercase',
-        fontFamily: 'sans-serif', fontWeight: 700, opacity: 0.7,
-      }}>
-        Secret #1 — Read the Invisible Sign
-      </div>
-
-      {/* Left panel */}
-      <div style={{
-        position: 'absolute', left: 0, top: 0, width: brollActive ? 920 : 1920, height: 1080,
+        position: 'absolute', left: 0, top: 0,
+        width: brollSynth ? 960 : 1920, height: 1080,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: brollActive ? '0 40px' : '0 80px',
+        padding: brollSynth ? '0 40px' : '0 80px',
       }}>
-        {/* Intro: Role Theory explanation */}
+
+        {/* Role theory intro — SAFE VALUED READY words Whisper-timed */}
         {opIntro > 0.01 && (
           <div style={{
-            position: 'absolute',
-            opacity: opIntro, maxWidth: 900,
-            display: 'flex', flexDirection: 'column', gap: 20,
+            position: 'absolute', opacity: opIntro,
+            display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1050,
           }}>
             <div style={{
-              fontSize: 52, fontWeight: 900, color: BRAND.white,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-              lineHeight: 1.2,
+              fontSize: 56, fontWeight: 900, color: BRAND.white,
+              fontFamily: '-apple-system, sans-serif', lineHeight: 1.2,
             }}>
               Every person walks into the room{' '}
-              <span style={{ color: BRAND.green }}>already playing a role.</span>
+              <span style={{ color: BRAND.brightGold,
+                textShadow: `0 0 25px ${BRAND.brightGold}70` }}>
+                already playing a role.
+              </span>
             </div>
             <div style={{
-              fontSize: 30, color: BRAND.textSecondary, fontFamily: 'sans-serif',
-              lineHeight: 1.5, maxWidth: 800,
+              fontSize: 30, color: BRAND.textSecondary,
+              fontFamily: 'sans-serif', lineHeight: 1.5, maxWidth: 860,
             }}>
-              Role theory: they've been rehearsing it for years.<br />
               Your client is wearing a sign that tells you exactly what they need to say yes.
             </div>
-            <div style={{ display: 'flex', gap: 30, marginTop: 10 }}>
-              {['SAFE', 'VALUED', 'READY'].map((w, i) => {
-                const wf = Math.max(0, lf - (60 + i * 20));
-                const entW = spring({ frame: wf, fps: 30, config: { damping: 14, stiffness: 90 } });
+            {/* SAFE / VALUED / READY — Whisper frames: lf304, lf332, lf361 */}
+            <div style={{ display: 'flex', gap: 28, marginTop: 8 }}>
+              {[
+                { word: 'SAFE',   triggerFrame: 304 },
+                { word: 'VALUED', triggerFrame: 332 },
+                { word: 'READY',  triggerFrame: 361 },
+              ].map(({ word, triggerFrame }) => {
+                const wf = Math.max(0, lf - triggerFrame);
+                const ent = spring({ frame: wf, fps: 30, config: { damping: 13, stiffness: 90 } });
                 return (
-                  <div key={i} style={{
-                    padding: '12px 28px',
-                    border: `1px solid ${BRAND.green}60`,
+                  <div key={word} style={{
+                    padding: '14px 32px',
+                    border: `1px solid ${BRAND.brightGold}50`,
                     borderRadius: 8,
-                    background: BRAND.cardBg,
-                    fontSize: 26, fontWeight: 800, color: BRAND.green,
+                    background: `rgba(221,208,85,0.06)`,
+                    fontSize: 28, fontWeight: 800, color: BRAND.brightGold,
                     fontFamily: 'sans-serif', letterSpacing: 3, textTransform: 'uppercase',
-                    opacity: entW,
-                    transform: `translateY(${interpolate(entW, [0, 1], [16, 0])}px)`,
-                    textShadow: `0 0 20px ${BRAND.green}60`,
+                    opacity: ent,
+                    transform: `translateY(${interpolate(ent, [0, 1], [18, 0])}px)`,
+                    textShadow: `0 0 ${18 * sineVal(lf, 0.05, 0.6, 1.0)}px ${BRAND.brightGold}60`,
                   }}>
-                    {w}
+                    {word}
                   </div>
                 );
               })}
@@ -501,67 +574,66 @@ const ThreeSignsScene: React.FC<{ localFrame: number; duration: number }> = ({ l
           </div>
         )}
 
-        {/* Builder sign */}
+        {/* Builder sign — enters at lf466 (Whisper: "The builder") */}
         {opBuilder > 0.01 && (
           <div style={{ position: 'absolute' }}>
-            <SignGraphic
-              label="The Builder" subtext="Help me grow this"
-              icon="🏗️" color={BRAND.green} startFrame={440} opacity={opBuilder}
+            <ArchetypeSign
+              label="The Builder" subtext="Help me grow this."
+              icon="🏗️" color={BRAND.green} whisperFrame={466} opacity={opBuilder}
             />
           </div>
         )}
 
-        {/* Protector sign */}
+        {/* Protector sign — enters at lf652 (Whisper: "The protector") */}
         {opProt > 0.01 && (
           <div style={{ position: 'absolute' }}>
-            <SignGraphic
-              label="The Protector" subtext="Don't let me lose what I built"
-              icon="🛡️" color={BRAND.white} startFrame={650} opacity={opProt}
+            <ArchetypeSign
+              label="The Protector" subtext="Don't let me lose what I built."
+              icon="🛡️" color={BRAND.white} whisperFrame={652} opacity={opProt}
             />
           </div>
         )}
 
-        {/* Achiever sign */}
+        {/* Achiever sign — enters at lf828 (Whisper: "The achiever") — Babson gold */}
         {opAchiev > 0.01 && (
           <div style={{ position: 'absolute' }}>
-            <SignGraphic
-              label="The Achiever" subtext="Recognize what I accomplished"
-              icon="🏆" color={BRAND.gold} startFrame={860} opacity={opAchiev}
+            <ArchetypeSign
+              label="The Achiever" subtext="Recognize what I accomplished."
+              icon="🏆" color={BRAND.brightGold} whisperFrame={828} opacity={opAchiev}
             />
           </div>
         )}
 
-        {/* Synthesis: "Most advisors pitch the same..." */}
+        {/* Synthesis — "most advisors pitch the same product to all three" */}
         {opSynth > 0.01 && (
           <div style={{
             position: 'absolute', opacity: opSynth,
-            display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900,
+            display: 'flex', flexDirection: 'column', gap: 22, maxWidth: 900,
           }}>
             <div style={{
               fontSize: 52, fontWeight: 900, color: BRAND.white,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-              lineHeight: 1.2,
+              fontFamily: '-apple-system, sans-serif', lineHeight: 1.2,
             }}>
               Most advisors pitch the{' '}
               <span style={{
-                color: BRAND.green,
+                color: BRAND.textSecondary,
                 textDecoration: 'line-through',
-                textDecorationColor: `${BRAND.green}80`,
+                textDecorationColor: `rgba(255,80,80,0.6)`,
               }}>same product</span>
               {' '}to all three.
             </div>
             <div style={{
-              fontSize: 40, fontWeight: 700, color: BRAND.textSecondary,
+              fontSize: 42, fontWeight: 700, color: BRAND.textSecondary,
               fontFamily: 'sans-serif', fontStyle: 'italic',
             }}>
               That's why they keep hearing:
             </div>
             <div style={{
               fontSize: 52, fontWeight: 900, color: BRAND.white,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-              borderLeft: `4px solid ${BRAND.green}`,
-              paddingLeft: 24,
-              fontStyle: 'italic',
+              fontFamily: '-apple-system, sans-serif',
+              borderLeft: `5px solid ${BRAND.brightGold}`,
+              paddingLeft: 24, fontStyle: 'italic',
+              textShadow: `0 0 30px rgba(255,255,255,0.08)`,
             }}>
               "I need to think about it."
             </div>
@@ -569,25 +641,19 @@ const ThreeSignsScene: React.FC<{ localFrame: number; duration: number }> = ({ l
         )}
       </div>
 
-      {/* Right B-roll panel */}
-      {brollActive && (
-        <div style={{
-          position: 'absolute', right: 60, top: '50%', transform: 'translateY(-50%)',
-          opacity: phaseOpacity(lf, 650, 1100, 25),
-        }}>
-          <BRollPlayer
-            src="teamwork.mp4"
-            width={720} height={405}
-            accentColor={BRAND.green}
-            caption="Every client is already telling you who they are"
-          />
-        </div>
-      )}
+      {/* B-roll during synthesis (right side, BRollPlayer self-positions) */}
+      {/* startFrame=1000: when "Most advisors pitch" is spoken (lf1017) */}
+      <BRollPlayer
+        src="conference.mp4"
+        accentColor={BRAND.green}
+        startFrame={1000}
+        durationFrames={210}
+      />
 
-      {brollActive && (
+      {brollSynth && (
         <div style={{
           position: 'absolute', left: 952, top: 0, width: 1, height: 1080,
-          background: `linear-gradient(180deg, transparent, ${BRAND.green}25 30%, ${BRAND.green}25 70%, transparent)`,
+          background: `linear-gradient(180deg, transparent, ${BRAND.green}22 30%, ${BRAND.green}22 70%, transparent)`,
         }} />
       )}
       <NoiseOverlay opacity={0.04} />
@@ -596,156 +662,175 @@ const ThreeSignsScene: React.FC<{ localFrame: number; duration: number }> = ({ l
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SCENE 3 — THE MAGIC QUESTION (f2050–f2700)
+// SCENE 3 — THE MAGIC QUESTION  (global f2050–f2700)
+// All local = absolute − 2050
+// Key whisper frames (local):
+//   lf35:  "unlocks every invisible sign"
+//   lf74:  "What"  lf78: "are"  lf79: "you"  lf80: "most"  lf85: "proud"  lf92: "of?"
+//   lf113: "Four words. That's it."
+//   lf252: "handing you their identity"
+//   lf299: "A builder tells you"   lf354: "A protector"   lf408: "An achiever"
+//   lf489: "Listen for the first thing they say"
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const MagicQuestionScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame, duration }) => {
-  const lf = localFrame;
-  // f2100 "invisible sign" → local f50
-  // f2124 "What are you most proud of?" → local f74
-  // f2302 "They're handing you their identity" → local f252
-  // f2349 "A builder tells you what they created" → local f299
+const MagicQuestionScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame: lf, duration }) => {
+  const opSetup    = phaseOpacity(lf, 0,   88,  18);  // lf35 "unlocks every invisible sign"
+  const opQuestion = phaseOpacity(lf, 65,  265, 22);  // lf74 "What are you most proud of"
+  const opIdentity = phaseOpacity(lf, 245, duration, 22); // lf252 "handing you their identity"
 
-  const opSetup    = phaseOpacity(lf, 0, 90, 20);
-  const opQuestion = phaseOpacity(lf, 70, 380, 20);
-  const opIdentity = phaseOpacity(lf, 360, duration, 20);
+  const brollIdentity = lf > 245;
 
-  const brollActive = lf > 360;
+  // Word-by-word build: WHAT(74) ARE(78) YOU(79) MOST(80) PROUD(85) OF?(92) — exact Whisper frames
+  const questionWords = [
+    { text: 'WHAT',  frame: 74,  size: 92,  color: BRAND.white },
+    { text: 'ARE',   frame: 78,  size: 80,  color: BRAND.white },
+    { text: 'YOU',   frame: 79,  size: 80,  color: BRAND.white },
+    { text: 'MOST',  frame: 80,  size: 92,  color: BRAND.white },
+    { text: 'PROUD', frame: 85,  size: 120, color: BRAND.brightGold }, // gold sparkle for PROUD
+    { text: 'OF?',   frame: 92,  size: 80,  color: BRAND.white },
+  ];
 
   return (
     <SceneBg>
       <ParticleField color={BRAND.green} count={20} seed={13} intensity={0.55} />
+      <SceneLabel text="Secret #2 — The Magic Question" />
 
       <div style={{
-        position: 'absolute', top: 55, left: '50%', transform: 'translateX(-50%)',
-        fontSize: 16, color: BRAND.green, letterSpacing: 4, textTransform: 'uppercase',
-        fontFamily: 'sans-serif', fontWeight: 700, opacity: 0.7,
-      }}>
-        Secret #2 — The Magic Question
-      </div>
-
-      {/* Left panel */}
-      <div style={{
-        position: 'absolute', left: 0, top: 0, width: brollActive ? 920 : 1920, height: 1080,
+        position: 'absolute', left: 0, top: 0,
+        width: brollIdentity ? 960 : 1920, height: 1080,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '0 60px',
-        transform: brollActive ? 'translateX(-60px) scale(0.97)' : 'none',
+        padding: brollIdentity ? '0 44px' : '100px 140px 0',
       }}>
 
-        {/* Setup */}
+        {/* Setup: "unlocks every invisible sign" */}
         {opSetup > 0.01 && (
           <div style={{
             position: 'absolute', opacity: opSetup,
-            display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 860,
+            display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 960,
           }}>
             <div style={{
-              fontSize: 44, fontWeight: 800, color: BRAND.white,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-              lineHeight: 1.25,
+              fontSize: 48, fontWeight: 800, color: BRAND.white,
+              fontFamily: '-apple-system, sans-serif', lineHeight: 1.25,
             }}>
               Here's the question that unlocks{' '}
-              <span style={{ color: BRAND.green }}>every invisible sign.</span>
+              <span style={{ color: BRAND.brightGold,
+                textShadow: `0 0 22px ${BRAND.brightGold}80` }}>
+                every invisible sign.
+              </span>
             </div>
           </div>
         )}
 
-        {/* THE BIG QUESTION — word by word spring build */}
-        {opQuestion > 0.01 && (() => {
-          const words = ['WHAT', 'ARE', 'YOU', 'MOST', 'PROUD', 'OF?'];
-          return (
-            <div style={{
-              position: 'absolute', opacity: opQuestion,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-            }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 18px', justifyContent: 'center', maxWidth: 820 }}>
-                {words.map((word, i) => {
-                  const wf = Math.max(0, lf - (80 + i * 12));
-                  const ent = spring({ frame: wf, fps: 30, config: { damping: 10, stiffness: 115 } });
-                  const glow = wf < 14
-                    ? interpolate(wf, [0, 5, 14], [2.5, 4.0, 1.0], { extrapolateRight: 'clamp' })
-                    : 1.0;
-                  const isProud = word === 'PROUD';
-                  return (
-                    <span key={i} style={{
-                      fontSize: isProud ? 110 : 96,
-                      fontWeight: 900,
-                      color: isProud ? BRAND.green : BRAND.white,
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                      textTransform: 'uppercase', letterSpacing: 2,
-                      opacity: ent,
-                      transform: `scale(${interpolate(ent, [0, 1], [0.4, 1])}) translateY(${interpolate(ent, [0, 1], [28, 0])}px)`,
-                      display: 'inline-block',
-                      textShadow: isProud
-                        ? `0 0 ${30 * glow}px ${BRAND.green}, 0 0 ${60 * glow}px ${BRAND.green}70`
-                        : `0 0 ${20 * glow}px rgba(255,255,255,0.4)`,
-                    }}>
-                      {word}
-                    </span>
-                  );
-                })}
-              </div>
-              <div style={{
-                fontSize: 26, color: BRAND.textSecondary, fontFamily: 'sans-serif',
-                letterSpacing: 3, textTransform: 'uppercase', marginTop: 8,
-                opacity: lf > 170 ? phaseOpacity(lf, 170, 380, 18) : 0,
-              }}>
-                Four words. That's it.
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Identity reveal */}
-        {opIdentity > 0.01 && (
+        {/* THE QUESTION — word by word, each at exact Whisper frame */}
+        {opQuestion > 0.01 && (
           <div style={{
-            position: 'absolute', opacity: opIdentity,
-            display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 880,
+            position: 'absolute', opacity: opQuestion,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
           }}>
             <div style={{
-              fontSize: 38, fontWeight: 800, color: BRAND.white,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-              lineHeight: 1.3,
+              display: 'flex', flexWrap: 'wrap', gap: '10px 16px',
+              justifyContent: 'center', maxWidth: brollIdentity ? 840 : 1200,
             }}>
-              They're not giving you data.{' '}
-              <span style={{ color: BRAND.green }}>They're handing you their identity.</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 }}>
-              {[
-                { type: 'Builder', says: 'tells you what they created.', color: BRAND.green, icon: '🏗️', frame: 380 },
-                { type: 'Protector', says: 'tells you what they preserved.', color: BRAND.white, icon: '🛡️', frame: 420 },
-                { type: 'Achiever', says: 'tells you a milestone that proves something.', color: BRAND.gold, icon: '🏆', frame: 460 },
-              ].map((item, i) => {
-                const ef = Math.max(0, lf - item.frame);
-                const ent = spring({ frame: ef, fps: 30, config: { damping: 14, stiffness: 80 } });
+              {questionWords.map((w, i) => {
+                const wf = Math.max(0, lf - w.frame);
+                const ent = spring({ frame: wf, fps: 30, config: { damping: 9, stiffness: 118 } });
+                const burst = wf < 22
+                  ? interpolate(wf, [0, 6, 22], [3.5, 5.5, 1.0], { extrapolateRight: 'clamp' })
+                  : w.color === BRAND.brightGold
+                    ? 1.0 + 0.12 * Math.sin(wf * 0.08)  // sustained pulse for PROUD
+                    : 1.0;
                 return (
-                  <div key={i} style={{
-                    display: 'flex', alignItems: 'center', gap: 16,
-                    padding: '14px 22px',
-                    background: BRAND.cardBg,
-                    border: `1px solid ${item.color}30`,
-                    borderRadius: 10,
+                  <span key={i} style={{
+                    fontSize: w.size, fontWeight: 900,
+                    color: w.color,
+                    fontFamily: '-apple-system, sans-serif',
+                    textTransform: 'uppercase', letterSpacing: 2,
                     opacity: ent,
-                    transform: `translateX(${interpolate(ent, [0, 1], [-30, 0])}px)`,
+                    transform: `scale(${interpolate(ent, [0, 1], [0.3, 1])}) translateY(${interpolate(ent, [0, 1], [30, 0])}px)`,
+                    display: 'inline-block',
+                    textShadow: w.color === BRAND.brightGold
+                      ? [
+                          `0 0 ${25 * burst}px ${BRAND.brightGold}`,
+                          `0 0 ${50 * burst}px ${BRAND.brightGold}BB`,
+                          `0 0 ${90 * burst}px ${BRAND.mangoPunch}70`,
+                        ].join(', ')
+                      : `0 0 ${20 * burst}px rgba(255,255,255,0.4)`,
                   }}>
-                    <span style={{ fontSize: 36 }}>{item.icon}</span>
-                    <div>
-                      <span style={{ fontSize: 28, fontWeight: 800, color: item.color, fontFamily: 'sans-serif' }}>
-                        A {item.type}{' '}
-                      </span>
-                      <span style={{ fontSize: 28, color: BRAND.white, fontFamily: 'sans-serif' }}>
-                        {item.says}
-                      </span>
-                    </div>
-                  </div>
+                    {w.text}
+                  </span>
                 );
               })}
             </div>
+            {/* "Four words. That's it." — appears at lf113 */}
             <div style={{
               fontSize: 26, color: BRAND.textSecondary, fontFamily: 'sans-serif',
-              fontStyle: 'italic', marginTop: 6,
-              borderLeft: `3px solid ${BRAND.green}`,
-              paddingLeft: 16,
-              opacity: lf > 500 ? phaseOpacity(lf, 500, duration, 18) : 0,
+              letterSpacing: 3, textTransform: 'uppercase', marginTop: 10,
+              opacity: phaseOpacity(lf, 113, 265, 16),
+            }}>
+              Four words. That's it.
+            </div>
+          </div>
+        )}
+
+        {/* Identity reveal — Whisper-timed entry per archetype */}
+        {opIdentity > 0.01 && (
+          <div style={{
+            position: 'absolute', opacity: opIdentity,
+            display: 'flex', flexDirection: 'column', gap: 18,
+            maxWidth: brollIdentity ? 860 : 1100,
+          }}>
+            <div style={{
+              fontSize: 36, fontWeight: 800, color: BRAND.white,
+              fontFamily: '-apple-system, sans-serif', lineHeight: 1.3,
+            }}>
+              They're not giving you data.{' '}
+              <span style={{ color: BRAND.brightGold,
+                textShadow: `0 0 20px ${BRAND.brightGold}70` }}>
+                They're handing you their identity.
+              </span>
+            </div>
+            {/* Archetype rows — each enters at exact Whisper frame */}
+            {[
+              { type: 'Builder',   says: 'tells you what they created.',  icon: '🏗️', color: BRAND.green,      frame: 299 },
+              { type: 'Protector', says: 'tells you what they preserved.', icon: '🛡️', color: BRAND.white,      frame: 354 },
+              { type: 'Achiever',  says: 'tells you a milestone that proves something.', icon: '🏆', color: BRAND.brightGold, frame: 408 },
+            ].map((item) => {
+              const ef = Math.max(0, lf - item.frame);
+              const ent = spring({ frame: ef, fps: 30, config: { damping: 14, stiffness: 80 } });
+              return (
+                <div key={item.type} style={{
+                  display: 'flex', alignItems: 'center', gap: 18,
+                  padding: '16px 24px',
+                  background: BRAND.cardBg,
+                  border: `1px solid ${item.color}28`,
+                  borderRadius: 10,
+                  opacity: ent,
+                  transform: `translateX(${interpolate(ent, [0, 1], [-36, 0])}px)`,
+                  boxShadow: `0 0 ${14 * sineVal(lf + item.frame, 0.04, 0.4, 1.0)}px ${item.color}18`,
+                }}>
+                  <span style={{ fontSize: 38 }}>{item.icon}</span>
+                  <div>
+                    <span style={{
+                      fontSize: 28, fontWeight: 800,
+                      color: item.color, fontFamily: 'sans-serif',
+                      textShadow: item.color === BRAND.brightGold
+                        ? `0 0 15px ${BRAND.brightGold}80` : 'none',
+                    }}>
+                      A {item.type}{' '}
+                    </span>
+                    <span style={{ fontSize: 28, color: BRAND.white, fontFamily: 'sans-serif' }}>
+                      {item.says}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+            {/* "Listen for the first thing they say" — lf489 */}
+            <div style={{
+              fontSize: 26, color: BRAND.sherwoodGrn, fontFamily: 'sans-serif',
+              fontStyle: 'italic', borderLeft: `3px solid ${BRAND.brightGold}`,
+              paddingLeft: 18,
+              opacity: phaseOpacity(lf, 489, duration, 16),
             }}>
               Listen for the first thing they say. That's the real answer.
             </div>
@@ -753,25 +838,18 @@ const MagicQuestionScene: React.FC<{ localFrame: number; duration: number }> = (
         )}
       </div>
 
-      {/* Right B-roll */}
-      {brollActive && (
-        <div style={{
-          position: 'absolute', right: 60, top: '50%', transform: 'translateY(-50%)',
-          opacity: phaseOpacity(lf, 360, duration, 25),
-        }}>
-          <BRollPlayer
-            src="reading.mp4"
-            width={720} height={405}
-            accentColor={BRAND.green}
-            caption="Their first answer is the real answer"
-          />
-        </div>
-      )}
+      {/* B-roll during identity reveal — reading/listening */}
+      <BRollPlayer
+        src="reading.mp4"
+        accentColor={BRAND.green}
+        startFrame={245}
+        durationFrames={405}
+      />
 
-      {brollActive && (
+      {brollIdentity && (
         <div style={{
           position: 'absolute', left: 952, top: 0, width: 1, height: 1080,
-          background: `linear-gradient(180deg, transparent, ${BRAND.green}25 30%, ${BRAND.green}25 70%, transparent)`,
+          background: `linear-gradient(180deg, transparent, ${BRAND.green}22 30%, ${BRAND.green}22 70%, transparent)`,
         }} />
       )}
       <NoiseOverlay opacity={0.04} />
@@ -780,100 +858,99 @@ const MagicQuestionScene: React.FC<{ localFrame: number; duration: number }> = (
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SCENE 4 — SILENCE IS TRUTH SERUM (f2700–f3280)
+// SCENE 4 — SILENCE IS TRUTH SERUM  (global f2700–f3280)
+// All local = absolute − 2700
+// Key whisper frames (local):
+//   lf11: "Silence"  lf18: "is"  lf32: "truth"  lf42: "serum"
+//   lf66: "After you ask the question"  lf105: "stop talking"  lf139: "Most advisors fill"
+//   lf285: "That's the mistake"  lf317: "Here's the technique"
+//   lf353: "Ask"  lf385: "Count to ten"  lf405: "Don't speak"  lf450: "Let them reach"
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const SilenceScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame, duration }) => {
-  const lf = localFrame;
-  // f2711 "Silence" → local f11
-  // f2766 "After you ask" → local f66
-  // f3027 "Here's the technique" → local f327
+const SilenceScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame: lf, duration }) => {
+  const opSlam      = phaseOpacity(lf, 0,   130, 16);  // SILENCE IS TRUTH SERUM
+  const opContext   = phaseOpacity(lf, 110, 340, 22);  // wrong vs. right panels
+  const opTechnique = phaseOpacity(lf, 310, duration, 22); // 4-step cards
 
-  const opSlam      = phaseOpacity(lf, 0, 200, 20);
-  const opContext   = phaseOpacity(lf, 190, 400, 20);
-  const opTechnique = phaseOpacity(lf, 380, duration, 20);
+  // SLAM words — each triggered at exact Whisper frame
+  const slamWords = [
+    { text: 'SILENCE', frame: 11, size: 150, color: BRAND.white },
+    { text: 'IS',      frame: 18, size:  80, color: BRAND.textSecondary },
+    { text: 'TRUTH',   frame: 32, size: 150, color: BRAND.brightGold },  // gold sparkle
+    { text: 'SERUM.',  frame: 42, size:  80, color: BRAND.white },
+  ];
 
   return (
     <SceneBg>
       <ParticleField color={BRAND.green} count={16} seed={55} intensity={0.4} />
+      <SceneLabel text="Secret #3 — The Silence Technique" />
 
-      <div style={{
-        position: 'absolute', top: 55, left: '50%', transform: 'translateX(-50%)',
-        fontSize: 16, color: BRAND.green, letterSpacing: 4, textTransform: 'uppercase',
-        fontFamily: 'sans-serif', fontWeight: 700, opacity: 0.7,
-      }}>
-        Secret #3 — The Silence Technique
-      </div>
-
-      {/* Full width — no B-roll split for silence scene — max visual impact */}
       <div style={{
         position: 'absolute', left: 0, top: 0, width: 1920, height: 1080,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '100px 120px 0',
       }}>
 
-        {/* SLAM: SILENCE IS TRUTH SERUM */}
-        {opSlam > 0.01 && (() => {
-          const words = [
-            { text: 'SILENCE', size: 144, color: BRAND.white },
-            { text: 'IS', size: 72, color: BRAND.textSecondary },
-            { text: 'TRUTH', size: 144, color: BRAND.green },
-            { text: 'SERUM.', size: 72, color: BRAND.white },
-          ];
-          return (
-            <div style={{
-              position: 'absolute', opacity: opSlam,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-            }}>
-              {words.map((w, i) => {
-                const wf = Math.max(0, lf - i * 10);
-                const ent = spring({ frame: wf, fps: 30, config: { damping: 11, stiffness: 100 } });
-                const glow = wf < 15
-                  ? interpolate(wf, [0, 5, 15], [2.0, 3.5, 1.0], { extrapolateRight: 'clamp' })
-                  : 1.0;
-                return (
-                  <div key={i} style={{
-                    fontSize: w.size, fontWeight: 900, color: w.color,
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                    letterSpacing: w.size > 100 ? 6 : 8,
-                    textTransform: 'uppercase', lineHeight: 1.05,
-                    opacity: ent,
-                    transform: `scale(${interpolate(ent, [0, 1], [0.5, 1])})`,
-                    textShadow: w.color === BRAND.green
-                      ? `0 0 ${40 * glow}px ${BRAND.green}, 0 0 ${80 * glow}px ${BRAND.green}60`
-                      : `0 0 ${20 * glow}px rgba(255,255,255,0.3)`,
-                  }}>
-                    {w.text}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
+        {/* SLAM — full screen, max impact */}
+        {opSlam > 0.01 && (
+          <div style={{
+            position: 'absolute', opacity: opSlam,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+          }}>
+            {slamWords.map((w) => {
+              const wf = Math.max(0, lf - w.frame);
+              const ent = spring({ frame: wf, fps: 30, config: { damping: 10, stiffness: 105 } });
+              const burst = wf < 22
+                ? interpolate(wf, [0, 6, 22], [3.5, 5.5, 1.0], { extrapolateRight: 'clamp' })
+                : 1.0;
+              return (
+                <div key={w.text} style={{
+                  fontSize: w.size, fontWeight: 900,
+                  color: w.color,
+                  fontFamily: '-apple-system, sans-serif',
+                  letterSpacing: w.size > 100 ? 8 : 10,
+                  textTransform: 'uppercase', lineHeight: 1.0,
+                  opacity: ent,
+                  transform: `scale(${interpolate(ent, [0, 1], [0.45, 1])})`,
+                  textShadow: w.color === BRAND.brightGold
+                    ? [
+                        `0 0 ${35 * burst}px ${BRAND.brightGold}`,
+                        `0 0 ${70 * burst}px ${BRAND.brightGold}BB`,
+                        `0 0 ${120 * burst}px ${BRAND.mangoPunch}80`,
+                      ].join(', ')
+                    : w.color === BRAND.white
+                      ? `0 0 ${22 * burst}px rgba(255,255,255,0.4)`
+                      : 'none',
+                }}>
+                  {w.text}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-        {/* Context: what most advisors do wrong */}
+        {/* Wrong vs. Right panels — appears at lf110 ("After you ask" at lf66, "stop talking" at lf105) */}
         {opContext > 0.01 && (
           <div style={{
             position: 'absolute', opacity: opContext,
-            display: 'flex', gap: 60, alignItems: 'stretch', maxWidth: 1500,
+            display: 'flex', gap: 56, alignItems: 'stretch', maxWidth: 1560,
           }}>
-            {/* Wrong way */}
+            {/* Wrong side */}
             <div style={{
-              flex: 1, padding: '40px 50px',
-              background: 'rgba(255,50,50,0.05)',
-              border: '2px solid rgba(255,80,80,0.25)',
-              borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 16,
+              flex: 1, padding: '44px 52px',
+              background: 'rgba(255,50,50,0.04)',
+              border: '2px solid rgba(255,80,80,0.22)',
+              borderRadius: 18,
+              display: 'flex', flexDirection: 'column', gap: 18,
             }}>
-              <div style={{ fontSize: 52, textAlign: 'center' }}>❌</div>
+              <div style={{ fontSize: 56, textAlign: 'center' }}>❌</div>
               <div style={{
-                fontSize: 36, fontWeight: 900, color: '#ff6b6b',
-                fontFamily: 'sans-serif', textAlign: 'center', letterSpacing: 1,
-              }}>
-                Most Advisors
-              </div>
+                fontSize: 38, fontWeight: 900, color: '#ff6b6b',
+                fontFamily: 'sans-serif', textAlign: 'center',
+              }}>Most Advisors</div>
               <div style={{
                 fontSize: 26, color: BRAND.white, fontFamily: 'sans-serif',
-                textAlign: 'center', lineHeight: 1.4,
+                textAlign: 'center', lineHeight: 1.45,
               }}>
                 Fill the silence with more data. More slides. More information.
               </div>
@@ -884,28 +961,29 @@ const SilenceScene: React.FC<{ localFrame: number; duration: number }> = ({ loca
                 That's the mistake.
               </div>
             </div>
-            {/* Right way */}
+            {/* Right side */}
             <div style={{
-              flex: 1, padding: '40px 50px',
+              flex: 1, padding: '44px 52px',
               background: BRAND.cardBg,
-              border: `2px solid ${BRAND.green}40`,
-              borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 16,
+              border: `2px solid ${BRAND.brightGold}35`,
+              borderRadius: 18,
+              display: 'flex', flexDirection: 'column', gap: 18,
+              boxShadow: `0 0 ${24 * sineVal(lf, 0.05, 0.5, 1.0)}px ${BRAND.brightGold}18`,
             }}>
-              <div style={{ fontSize: 52, textAlign: 'center' }}>✅</div>
+              <div style={{ fontSize: 56, textAlign: 'center' }}>✅</div>
               <div style={{
-                fontSize: 36, fontWeight: 900, color: BRAND.green,
-                fontFamily: 'sans-serif', textAlign: 'center', letterSpacing: 1,
-              }}>
-                Truth Serum
-              </div>
+                fontSize: 38, fontWeight: 900, color: BRAND.brightGold,
+                fontFamily: 'sans-serif', textAlign: 'center',
+                textShadow: `0 0 18px ${BRAND.brightGold}70`,
+              }}>Truth Serum</div>
               <div style={{
                 fontSize: 26, color: BRAND.white, fontFamily: 'sans-serif',
-                textAlign: 'center', lineHeight: 1.4,
+                textAlign: 'center', lineHeight: 1.45,
               }}>
-                Ask the question. Then stop. The words they search for are the ones that matter.
+                Ask the question. Stop. The words they search for are the ones that matter.
               </div>
               <div style={{
-                fontSize: 22, color: BRAND.green, fontFamily: 'sans-serif',
+                fontSize: 22, color: BRAND.brightGold, fontFamily: 'sans-serif',
                 textAlign: 'center', fontStyle: 'italic',
               }}>
                 Let them reach for the words.
@@ -914,42 +992,47 @@ const SilenceScene: React.FC<{ localFrame: number; duration: number }> = ({ loca
           </div>
         )}
 
-        {/* The Technique — 4 steps */}
+        {/* 4-Step Technique cards — Whisper-timed entrances */}
         {opTechnique > 0.01 && (
           <div style={{
             position: 'absolute', opacity: opTechnique,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, maxWidth: 1200,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24,
+            maxWidth: 1400,
           }}>
             <div style={{
-              fontSize: 48, fontWeight: 900, color: BRAND.white,
+              fontSize: 50, fontWeight: 900, color: BRAND.white,
               fontFamily: '-apple-system, sans-serif',
             }}>
-              The <span style={{ color: BRAND.green }}>4-Step</span> Technique
+              The{' '}
+              <span style={{ color: BRAND.brightGold,
+                textShadow: `0 0 22px ${BRAND.brightGold}80` }}>4-Step</span>
+              {' '}Technique
             </div>
-            <div style={{ display: 'flex', gap: 24 }}>
+            <div style={{ display: 'flex', gap: 22 }}>
               {[
-                { num: '1', text: 'Ask the question', sub: '"What are you most proud of?"', icon: '🎯' },
-                { num: '2', text: 'Count to ten', sub: 'Silently. Don\'t speak.', icon: '🔢' },
-                { num: '3', text: 'Let them reach', sub: 'The searched-for words are the real answer.', icon: '🤫' },
-                { num: '4', text: 'Mirror it back', sub: 'Build your entire pitch around what they said.', icon: '🪞' },
-              ].map((step, i) => {
-                const sf = Math.max(0, lf - (380 + i * 18));
-                const entS = spring({ frame: sf, fps: 30, config: { damping: 14, stiffness: 80 } });
+                { num: '1', label: 'Ask the question',     sub: '"What are you most proud of?"', icon: '🎯', frame: 353 },
+                { num: '2', label: 'Count to ten',         sub: 'Silently. In your head.',       icon: '🔢', frame: 385 },
+                { num: '3', label: "Don't speak",          sub: 'Resist filling the silence.',   icon: '🤫', frame: 405 },
+                { num: '4', label: 'Let them reach',       sub: 'Those words matter most.',      icon: '🪞', frame: 450 },
+              ].map((step) => {
+                const sf = Math.max(0, lf - step.frame);
+                const ent = spring({ frame: sf, fps: 30, config: { damping: 14, stiffness: 80 } });
                 return (
-                  <div key={i} style={{
-                    flex: 1, padding: '28px 24px',
+                  <div key={step.num} style={{
+                    flex: 1, padding: '30px 26px',
                     background: BRAND.cardBg,
-                    border: `1px solid ${BRAND.green}35`,
+                    border: `1px solid ${BRAND.brightGold}28`,
                     borderRadius: 14,
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-                    opacity: entS,
-                    transform: `translateY(${interpolate(entS, [0, 1], [30, 0])}px)`,
-                    boxShadow: `0 0 ${20 * sineGlow(lf + i * 20, 0.05, 0.5, 1.0)}px ${BRAND.green}20`,
+                    opacity: ent,
+                    transform: `translateY(${interpolate(ent, [0, 1], [32, 0])}px)`,
+                    boxShadow: `0 0 ${18 * sineVal(lf + parseInt(step.num) * 20, 0.05, 0.4, 1.0)}px ${BRAND.brightGold}15`,
                   }}>
                     <div style={{ fontSize: 46 }}>{step.icon}</div>
                     <div style={{
-                      fontSize: 52, fontWeight: 900, color: BRAND.green,
+                      fontSize: 58, fontWeight: 900, color: BRAND.brightGold,
                       fontFamily: 'sans-serif',
+                      textShadow: `0 0 18px ${BRAND.brightGold}70`,
                     }}>
                       {step.num}
                     </div>
@@ -957,12 +1040,12 @@ const SilenceScene: React.FC<{ localFrame: number; duration: number }> = ({ loca
                       fontSize: 24, fontWeight: 800, color: BRAND.white,
                       fontFamily: 'sans-serif', textAlign: 'center',
                     }}>
-                      {step.text}
+                      {step.label}
                     </div>
                     <div style={{
                       fontSize: 18, color: BRAND.textSecondary,
-                      fontFamily: 'sans-serif', textAlign: 'center', lineHeight: 1.4,
-                      fontStyle: 'italic',
+                      fontFamily: 'sans-serif', textAlign: 'center',
+                      lineHeight: 1.4, fontStyle: 'italic',
                     }}>
                       {step.sub}
                     </div>
@@ -979,238 +1062,254 @@ const SilenceScene: React.FC<{ localFrame: number; duration: number }> = ({ loca
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SCENE 5 — MAYA'S STORY (f3280–f4100)
+// SCENE 5 — MAYA'S STORY  (global f3280–f4100)
+// All local = absolute − 3280
+// Key whisper frames (local):
+//   lf22: "Maya"  lf95: "Wall Street"  lf134: "$30"  lf156: "million account"
+//   lf186: "She didn't have"  lf289: "She asked"  lf341: "He said"
+//   lf365: "my kids"  lf396: "worry"  lf416: "A protector"
+//   lf444: "Her entire proposal"  lf526: "his kids would never"  lf582: "Not returns"
+//   lf643: "Just that"  lf669: "She won"  lf707: "Wall Street firms"
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const MayaScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame, duration }) => {
-  const lf = localFrame;
-  // f3302 Maya → local f22
-  // f3621 "He said" → local f341
-  // f3697 "A protector" → local f417
-  // f3806 "His kids would never have to worry" → local f526
-  // f3949 "She won the account" → local f669
-  // f4077 "Every client you will ever meet" → local f797
+const MayaScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame: lf, duration }) => {
+  const opSetup   = phaseOpacity(lf, 0,   355, 22);  // Maya intro through "He said" (lf341)
+  const opQuote   = phaseOpacity(lf, 330, 450, 20);  // "He said" (lf341) → protector (lf416)
+  const opProtect = phaseOpacity(lf, 410, 690, 22);  // "A protector" → "She won" (lf669)
+  const opWin     = phaseOpacity(lf, 650, duration, 22); // "She won" (lf669) → scene end
 
-  const opSetup    = phaseOpacity(lf, 0, 360, 20);
-  const opQuote    = phaseOpacity(lf, 330, 550, 20);
-  const opProtect  = phaseOpacity(lf, 520, 700, 20);
-  const opWin      = phaseOpacity(lf, 670, duration, 20);
-
-  const brollWin = lf > 670;
+  const brollSetup = lf > 0 && lf < 330;
+  const brollWin   = lf > 650;
 
   return (
     <SceneBg>
       <ParticleField color={BRAND.green} count={20} seed={88} intensity={0.55} />
+      <SceneLabel text="The Story — Maya vs. Wall Street" />
 
-      <div style={{
-        position: 'absolute', top: 55, left: '50%', transform: 'translateX(-50%)',
-        fontSize: 16, color: BRAND.green, letterSpacing: 4, textTransform: 'uppercase',
-        fontFamily: 'sans-serif', fontWeight: 700, opacity: 0.7,
-      }}>
-        The Story — Maya vs. Wall Street
-      </div>
+      {/* B-roll during setup: conference.mp4 showing competitive landscape */}
+      <BRollPlayer
+        src="conference.mp4"
+        accentColor={BRAND.green}
+        startFrame={10}
+        durationFrames={320}
+      />
 
-      {/* Left panel */}
+      {/* B-roll during win: walking toward light */}
+      <BRollPlayer
+        src="walking-light.mp4"
+        accentColor={BRAND.brightGold}
+        startFrame={660}
+        durationFrames={160}
+      />
+
+      {/* Left content panel */}
       <div style={{
         position: 'absolute', left: 0, top: 0,
-        width: brollWin ? 920 : 1920, height: 1080,
+        width: (brollSetup || brollWin) ? 960 : 1920,
+        height: 1080,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: brollWin ? '0 40px' : '0 80px',
+        padding: (brollSetup || brollWin) ? '0 44px' : '100px 160px 0',
       }}>
 
-        {/* Setup */}
+        {/* Setup: Maya's context */}
         {opSetup > 0.01 && (
           <div style={{
             position: 'absolute', opacity: opSetup,
-            display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 960,
+            display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 880,
           }}>
             <div style={{
-              fontSize: 26, color: BRAND.textSecondary, letterSpacing: 2,
+              fontSize: 24, color: BRAND.textSecondary, letterSpacing: 2,
               fontFamily: 'sans-serif', textTransform: 'uppercase',
             }}>
               A junior advisor vs. three Wall Street firms
             </div>
             <div style={{
-              fontSize: 60, fontWeight: 900, color: BRAND.white,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-              lineHeight: 1.15,
+              fontSize: 64, fontWeight: 900, color: BRAND.white,
+              fontFamily: '-apple-system, sans-serif', lineHeight: 1.1,
             }}>
-              <span style={{ color: BRAND.green }}>Maya</span> was competing for a
+              <span style={{ color: BRAND.brightGold,
+                textShadow: `0 0 28px ${BRAND.brightGold}80` }}>Maya</span>{' '}
+              was competing for a
             </div>
+            {/* $30M slam — enters at lf134 */}
+            {lf >= 134 && (
+              <div style={{
+                fontSize: 130, fontWeight: 900, color: BRAND.white,
+                fontFamily: '-apple-system, sans-serif',
+                lineHeight: 0.9, letterSpacing: -4,
+                opacity: Math.min(1, (lf - 134) / 10),
+                textShadow: '0 0 60px rgba(255,255,255,0.14)',
+              }}>
+                $30M
+              </div>
+            )}
             <div style={{
-              fontSize: 120, fontWeight: 900, color: BRAND.white,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-              lineHeight: 0.95, letterSpacing: -3,
-              textShadow: `0 0 60px rgba(255,255,255,0.15)`,
-            }}>
-              $30M
-            </div>
-            <div style={{
-              fontSize: 36, color: BRAND.textSecondary, fontFamily: 'sans-serif',
+              fontSize: 32, color: BRAND.textSecondary, fontFamily: 'sans-serif',
             }}>
               account. No biggest name. No longest track record.
             </div>
+            {/* "She asked what he was most proud of" — lf289 */}
             <div style={{
-              fontSize: 30, color: BRAND.green, fontFamily: 'sans-serif',
-              fontStyle: 'italic', marginTop: 8,
-              borderLeft: `3px solid ${BRAND.green}`,
+              fontSize: 30, color: BRAND.brightGold, fontFamily: 'sans-serif',
+              fontStyle: 'italic',
+              borderLeft: `3px solid ${BRAND.brightGold}`,
               paddingLeft: 20,
+              opacity: phaseOpacity(lf, 289, 355, 16),
+              textShadow: `0 0 18px ${BRAND.brightGold}60`,
             }}>
               She asked what he was most proud of.
             </div>
           </div>
         )}
 
-        {/* The quote */}
+        {/* Quote: "That my kids never had to worry." — lf341 */}
         {opQuote > 0.01 && (
           <div style={{
             position: 'absolute', opacity: opQuote,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, maxWidth: 960,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22,
+            maxWidth: 960,
           }}>
             <div style={{
-              fontSize: 130, color: BRAND.green, fontFamily: 'Georgia, serif',
-              lineHeight: 0.7, opacity: 0.3,
+              fontSize: 140, color: BRAND.brightGold, fontFamily: 'Georgia, serif',
+              lineHeight: 0.7, opacity: 0.18,
             }}>"</div>
             <div style={{
-              fontSize: 62, fontWeight: 800, color: BRAND.white,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-              textAlign: 'center', lineHeight: 1.25, fontStyle: 'italic',
-              textShadow: `0 0 40px rgba(255,255,255,0.1)`,
+              fontSize: 66, fontWeight: 800, color: BRAND.white,
+              fontFamily: '-apple-system, sans-serif', textAlign: 'center',
+              lineHeight: 1.2, fontStyle: 'italic',
             }}>
               That my kids never had to worry.
             </div>
             <div style={{
-              fontSize: 28, color: BRAND.textSecondary, fontFamily: 'sans-serif',
-              fontStyle: 'italic', opacity: 0.8,
+              fontSize: 26, color: BRAND.textSecondary, fontFamily: 'sans-serif',
+              fontStyle: 'italic', opacity: 0.75,
             }}>
               — the client's answer
             </div>
           </div>
         )}
 
-        {/* Protector reveal */}
-        {opProtect > 0.01 && (
-          <div style={{
-            position: 'absolute', opacity: opProtect,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
-          }}>
-            {(() => {
-              const wf = Math.max(0, lf - 520);
-              const ent = spring({ frame: wf, fps: 30, config: { damping: 9, stiffness: 110 } });
-              const glow = wf < 18
-                ? interpolate(wf, [0, 6, 18], [3.0, 4.5, 1.0], { extrapolateRight: 'clamp' })
-                : 1.0;
-              return (
-                <>
-                  <div style={{
-                    fontSize: 160, fontWeight: 900, color: BRAND.white,
-                    fontFamily: '-apple-system, sans-serif',
-                    letterSpacing: 8,
-                    opacity: ent, transform: `scale(${interpolate(ent, [0, 1], [0.5, 1])})`,
-                    textShadow: `0 0 ${40 * glow}px rgba(255,255,255,0.5)`,
-                  }}>
-                    A
-                  </div>
-                  <div style={{
-                    fontSize: 110, fontWeight: 900, color: BRAND.green,
-                    fontFamily: '-apple-system, sans-serif',
-                    letterSpacing: 6, textTransform: 'uppercase',
-                    opacity: ent, transform: `scale(${interpolate(ent, [0, 1], [0.5, 1])})`,
-                    textShadow: `0 0 ${50 * glow}px ${BRAND.green}, 0 0 ${100 * glow}px ${BRAND.green}60`,
-                  }}>
-                    PROTECTOR.
-                  </div>
-                  <div style={{
-                    fontSize: 32, color: BRAND.textSecondary, fontFamily: 'sans-serif',
-                    fontStyle: 'italic', opacity: ent * 0.8,
-                    marginTop: 8,
-                  }}>
-                    Her entire proposal centered on one idea.
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        )}
+        {/* Protector reveal — "A PROTECTOR." slams in at lf416 */}
+        {opProtect > 0.01 && (() => {
+          const wf = Math.max(0, lf - 416);
+          const ent = spring({ frame: wf, fps: 30, config: { damping: 9, stiffness: 110 } });
+          const burst = wf < 24
+            ? interpolate(wf, [0, 6, 24], [3.5, 5.5, 1.0], { extrapolateRight: 'clamp' })
+            : 1.0;
+          // "centered on one idea" sub-text at lf444
+          const subEnt = spring({ frame: Math.max(0, lf - 444), fps: 30, config: { damping: 16, stiffness: 70 } });
+          // "his kids would never have to worry" at lf526
+          const ideaEnt = spring({ frame: Math.max(0, lf - 526), fps: 30, config: { damping: 16, stiffness: 70 } });
+          return (
+            <div style={{
+              position: 'absolute', opacity: opProtect,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18,
+            }}>
+              <div style={{
+                fontSize: 170, fontWeight: 900, color: BRAND.white,
+                fontFamily: '-apple-system, sans-serif',
+                letterSpacing: 10,
+                opacity: ent, transform: `scale(${interpolate(ent, [0, 1], [0.45, 1])})`,
+                textShadow: `0 0 ${40 * burst}px rgba(255,255,255,0.5)`,
+              }}>
+                A
+              </div>
+              <div style={{
+                fontSize: 110, fontWeight: 900, color: BRAND.brightGold,
+                fontFamily: '-apple-system, sans-serif',
+                letterSpacing: 6, textTransform: 'uppercase',
+                opacity: ent, transform: `scale(${interpolate(ent, [0, 1], [0.45, 1])})`,
+                textShadow: [
+                  `0 0 ${45 * burst}px ${BRAND.brightGold}`,
+                  `0 0 ${90 * burst}px ${BRAND.brightGold}BB`,
+                  `0 0 ${150 * burst}px ${BRAND.mangoPunch}70`,
+                ].join(', '),
+              }}>
+                PROTECTOR.
+              </div>
+              <div style={{
+                fontSize: 34, color: BRAND.textSecondary, fontFamily: 'sans-serif',
+                fontStyle: 'italic', opacity: subEnt * 0.85, marginTop: 8,
+              }}>
+                Her entire proposal centered on one idea.
+              </div>
+              <div style={{
+                fontSize: 40, fontWeight: 800, color: BRAND.white,
+                fontFamily: '-apple-system, sans-serif', textAlign: 'center',
+                lineHeight: 1.2, fontStyle: 'italic',
+                opacity: ideaEnt,
+                transform: `translateY(${interpolate(ideaEnt, [0, 1], [18, 0])}px)`,
+              }}>
+                "That his kids would never have to worry."
+              </div>
+              <div style={{
+                fontSize: 26, color: BRAND.textSecondary, fontFamily: 'sans-serif',
+                fontStyle: 'italic',
+                opacity: phaseOpacity(lf, 582, 690, 16),
+              }}>
+                Not returns. Not numbers. Just that.
+              </div>
+            </div>
+          );
+        })()}
 
-        {/* Win */}
-        {opWin > 0.01 && (
-          <div style={{
-            position: 'absolute', opacity: opWin,
-            display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 880,
-          }}>
+        {/* Win — "She won the account" at lf669 */}
+        {opWin > 0.01 && (() => {
+          const winEnt = spring({ frame: Math.max(0, lf - 669), fps: 30, config: { damping: 14, stiffness: 80 } });
+          const wallEnt = spring({ frame: Math.max(0, lf - 707), fps: 30, config: { damping: 14, stiffness: 70 } });
+          return (
             <div style={{
-              fontSize: 48, fontWeight: 900, color: BRAND.white,
-              fontFamily: '-apple-system, sans-serif', lineHeight: 1.2,
+              position: 'absolute', opacity: opWin,
+              display: 'flex', flexDirection: 'column', gap: 22, maxWidth: 880,
             }}>
-              "That his kids would never have to worry."
-            </div>
-            <div style={{
-              fontSize: 30, color: BRAND.textSecondary, fontFamily: 'sans-serif',
-              fontStyle: 'italic',
-            }}>
-              Not returns. Not numbers. Just that.
-            </div>
-            <div style={{
-              height: 3, width: '100%',
-              background: `linear-gradient(90deg, ${BRAND.green}, transparent)`,
-              margin: '8px 0',
-            }} />
-            {(() => {
-              const wf = Math.max(0, lf - 700);
-              const ent = spring({ frame: wf, fps: 30, config: { damping: 14, stiffness: 80 } });
-              return (
-                <div style={{
-                  opacity: ent,
-                  transform: `translateY(${interpolate(ent, [0, 1], [20, 0])}px)`,
-                  display: 'flex', alignItems: 'center', gap: 20,
-                  padding: '20px 30px',
-                  background: `linear-gradient(135deg, ${BRAND.green}15, transparent)`,
-                  border: `2px solid ${BRAND.green}50`,
-                  borderRadius: 12,
-                  boxShadow: `0 0 ${30 * sineGlow(lf, 0.04, 0.5, 1.0)}px ${BRAND.green}30`,
-                }}>
-                  <span style={{ fontSize: 52 }}>🏆</span>
-                  <div>
-                    <div style={{
-                      fontSize: 44, fontWeight: 900, color: BRAND.green,
-                      fontFamily: '-apple-system, sans-serif',
-                    }}>
-                      She won the account.
-                    </div>
-                    <div style={{
-                      fontSize: 24, color: BRAND.textSecondary, fontFamily: 'sans-serif',
-                      fontStyle: 'italic',
-                    }}>
-                      The Wall Street firms never knew what sign he was wearing.
-                    </div>
+              <div style={{
+                opacity: winEnt,
+                transform: `translateY(${interpolate(winEnt, [0, 1], [22, 0])}px)`,
+                display: 'flex', alignItems: 'center', gap: 22,
+                padding: '24px 36px',
+                background: `linear-gradient(135deg, ${BRAND.brightGold}12, transparent)`,
+                border: `2px solid ${BRAND.brightGold}50`,
+                borderRadius: 14,
+                boxShadow: `0 0 ${30 * sineVal(lf, 0.04, 0.5, 1.0)}px ${BRAND.brightGold}30`,
+              }}>
+                <span style={{ fontSize: 56 }}>🏆</span>
+                <div>
+                  <div style={{
+                    fontSize: 48, fontWeight: 900, color: BRAND.brightGold,
+                    fontFamily: '-apple-system, sans-serif',
+                    textShadow: `0 0 22px ${BRAND.brightGold}80`,
+                  }}>
+                    She won the account.
                   </div>
                 </div>
-              );
-            })()}
-          </div>
-        )}
+              </div>
+              <div style={{
+                fontSize: 28, color: BRAND.textSecondary, fontFamily: 'sans-serif',
+                fontStyle: 'italic', lineHeight: 1.4,
+                opacity: wallEnt,
+                transform: `translateY(${interpolate(wallEnt, [0, 1], [14, 0])}px)`,
+                borderLeft: `3px solid ${BRAND.green}`,
+                paddingLeft: 18,
+              }}>
+                The Wall Street firms never knew what sign he was wearing.
+              </div>
+              <div style={{
+                fontSize: 32, fontWeight: 700, color: BRAND.white,
+                fontFamily: '-apple-system, sans-serif', lineHeight: 1.35,
+                opacity: phaseOpacity(lf, 797, duration, 16),
+              }}>
+                Every client you will ever meet is already{' '}
+                <span style={{ color: BRAND.brightGold }}>telling you who they are.</span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
-      {/* B-roll for win phase */}
-      {brollWin && (
-        <div style={{
-          position: 'absolute', right: 60, top: '50%', transform: 'translateY(-50%)',
-          opacity: phaseOpacity(lf, 670, duration, 25),
-        }}>
-          <BRollPlayer
-            src="walking-light.mp4"
-            width={720} height={405}
-            accentColor={BRAND.green}
-            caption="She won by reading the invisible sign"
-          />
-        </div>
-      )}
-
-      {brollWin && (
+      {(brollSetup || brollWin) && (
         <div style={{
           position: 'absolute', left: 952, top: 0, width: 1, height: 1080,
-          background: `linear-gradient(180deg, transparent, ${BRAND.green}25 30%, ${BRAND.green}25 70%, transparent)`,
+          background: `linear-gradient(180deg, transparent, ${BRAND.green}22 30%, ${BRAND.green}22 70%, transparent)`,
         }} />
       )}
       <NoiseOverlay opacity={0.04} />
@@ -1219,106 +1318,103 @@ const MayaScene: React.FC<{ localFrame: number; duration: number }> = ({ localFr
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SCENE 6 — CTA (f4100–f4420)
+// SCENE 6 — CTA  (global f4100–f4420)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const CTAScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame, duration }) => {
-  const lf = localFrame;
+const CTAScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame: lf, duration }) => {
   const { fps } = useVideoConfig();
-  const ent = spring({ frame: lf, fps, config: { damping: 16, stiffness: 60 } });
-  const glow = sineGlow(lf, 0.05, 0.6, 1.1);
-  const ringPulse = (offset: number) => 0.5 + 0.5 * Math.sin(lf * 0.08 + offset);
-  const bounceY = Math.sin(lf * 0.12) * 10;
-  const globalFade = lf > duration - 20
-    ? interpolate(lf, [duration - 20, duration], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  const ent = spring({ frame: lf, fps, config: { damping: 16, stiffness: 58 } });
+  const glow = sineVal(lf, 0.05, 0.6, 1.1);
+  const bounceY = Math.sin(lf * 0.12) * 11;
+  const globalFade = lf > duration - 22
+    ? interpolate(lf, [duration - 22, duration], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
     : 1;
 
   return (
     <AbsoluteFill style={{ backgroundColor: BRAND.bgDark, opacity: globalFade }}>
       <AbsoluteFill style={{
-        background: `radial-gradient(ellipse at 50% 50%, ${BRAND.green}12 0%, transparent 65%), ${BRAND.bgDark}`,
+        background: `radial-gradient(ellipse at 50% 50%, ${BRAND.green}10 0%, transparent 62%), ${BRAND.bgDark}`,
       }} />
-      <ParticleField color={BRAND.green} count={24} seed={33} intensity={0.7} />
+      <ParticleField color={BRAND.brightGold} count={24} seed={33} intensity={0.55} />
 
       {/* Concentric pulsing rings */}
       {[0, 1, 2].map(i => (
         <div key={i} style={{
           position: 'absolute',
           left: '50%', top: '50%',
-          width: 500 + i * 180,
-          height: 500 + i * 180,
+          width: 520 + i * 190,
+          height: 520 + i * 190,
           transform: 'translate(-50%, -50%)',
           borderRadius: '50%',
-          border: `1px solid ${BRAND.green}`,
-          opacity: ringPulse(i * 1.2) * 0.22,
-          scale: String(0.9 + ringPulse(i * 1.5) * 0.15),
+          border: `1px solid ${i === 1 ? BRAND.brightGold : BRAND.green}`,
+          opacity: (0.5 + 0.5 * Math.sin(lf * 0.08 + i * 1.2)) * 0.18,
+          scale: String(0.9 + (0.5 + 0.5 * Math.sin(lf * 0.07 + i * 1.4)) * 0.14),
         }} />
       ))}
 
-      {/* Main content */}
+      {/* Main CTA content */}
       <div style={{
         position: 'absolute', left: 0, top: 0, width: 1920, height: 1080,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        gap: 80,
+        gap: 90,
         opacity: ent,
-        transform: `translateY(${interpolate(ent, [0, 1], [30, 0])}px)`,
+        transform: `translateY(${interpolate(ent, [0, 1], [32, 0])}px)`,
       }}>
-
-        {/* Left: headline + CTA */}
+        {/* Left: headline + button + URL */}
         <div style={{
-          display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 860,
+          display: 'flex', flexDirection: 'column', gap: 26, maxWidth: 880,
         }}>
           <div style={{
-            fontSize: 20, color: BRAND.green, letterSpacing: 4,
+            fontSize: 18, color: BRAND.brightGold, letterSpacing: 4,
             textTransform: 'uppercase', fontFamily: 'sans-serif', fontWeight: 700,
+            textShadow: `0 0 14px ${BRAND.brightGold}70`,
           }}>
             Every Client is Already Telling You
           </div>
+          {/* Color-wave headline */}
+          <ColorWaveText
+            text="Are You Listening For It?"
+            fontSize={62}
+            startFrame={0}
+            speed={0.04}
+            fontWeight={900}
+          />
           <div style={{
-            fontSize: 68, fontWeight: 900, color: BRAND.white,
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            lineHeight: 1.1,
-            color: `hsl(${interpolate(Math.sin(lf * 0.04), [-1, 1], [145, 165])}, 70%, ${interpolate(Math.sin(lf * 0.03 + 1), [-1, 1], [75, 95])}%)`,
+            fontSize: 28, color: BRAND.textSecondary, fontFamily: 'sans-serif', lineHeight: 1.45,
           }}>
-            Are You Listening For It?
+            Take the 60-second quiz and discover which signals you're already catching —
+            and which ones you're missing.
           </div>
+          {/* CTA button */}
           <div style={{
-            fontSize: 30, color: BRAND.textSecondary, fontFamily: 'sans-serif',
-            lineHeight: 1.4,
-          }}>
-            Take the 60-second quiz and discover which signals you're already catching — and which ones you're missing.
-          </div>
-
-          {/* CTA box with glow */}
-          <div style={{
-            background: BRAND.green,
+            background: BRAND.brightGold,
             borderRadius: 12,
-            padding: '22px 48px',
+            padding: '22px 52px',
             textAlign: 'center',
-            fontSize: 32, fontWeight: 900, color: BRAND.black,
+            fontSize: 30, fontWeight: 900, color: BRAND.black,
             fontFamily: '-apple-system, sans-serif', letterSpacing: 2,
-            boxShadow: `0 0 ${30 * glow}px ${BRAND.green}80, 0 0 ${60 * glow}px ${BRAND.green}40`,
-            cursor: 'pointer',
+            boxShadow: [
+              `0 0 ${28 * glow}px ${BRAND.brightGold}90`,
+              `0 0 ${55 * glow}px ${BRAND.mangoPunch}55`,
+              `0 0 ${90 * glow}px ${BRAND.mangoPunch}25`,
+            ].join(', '),
           }}>
             TAKE THE FREE QUIZ →
           </div>
-
-          {/* Bouncing arrow + URL */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 16,
-            marginTop: -4,
-          }}>
+          {/* Bouncing arrow + typewriter URL */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: -6 }}>
             <div style={{
-              fontSize: 36, transform: `translateY(${bounceY}px)`,
-              color: BRAND.green,
+              fontSize: 40, color: BRAND.brightGold,
+              transform: `translateY(${bounceY}px)`,
+              textShadow: `0 0 18px ${BRAND.brightGold}80`,
             }}>↑</div>
             <TypewriterText
               text="scottmagnacca.com"
               delay={60}
               speed={3}
               color={BRAND.textSecondary}
-              fontSize={28}
-              glowColor={BRAND.green}
+              fontSize={26}
+              glowColor={BRAND.brightGold}
               fontWeight={400}
               cursor={false}
             />
@@ -1327,13 +1423,16 @@ const CTAScene: React.FC<{ localFrame: number; duration: number }> = ({ localFra
 
         {/* Right: QR code */}
         <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22,
         }}>
           <div style={{
             padding: 20, background: BRAND.black,
-            border: `3px solid ${BRAND.green}`,
+            border: `3px solid ${BRAND.brightGold}`,
             borderRadius: 16,
-            boxShadow: `0 0 ${40 * glow}px ${BRAND.green}50, 0 0 ${80 * glow}px ${BRAND.green}25`,
+            boxShadow: [
+              `0 0 ${38 * glow}px ${BRAND.brightGold}55`,
+              `0 0 ${75 * glow}px ${BRAND.mangoPunch}30`,
+            ].join(', '),
           }}>
             <Img
               src={staticFile('qr-scottmagnacca.png')}
@@ -1341,9 +1440,9 @@ const CTAScene: React.FC<{ localFrame: number; duration: number }> = ({ localFra
             />
           </div>
           <div style={{
-            fontSize: 20, color: BRAND.green, letterSpacing: 2,
+            fontSize: 20, color: BRAND.brightGold, letterSpacing: 2,
             fontFamily: 'sans-serif', textTransform: 'uppercase',
-            textShadow: `0 0 15px ${BRAND.green}80`,
+            textShadow: `0 0 16px ${BRAND.brightGold}80`,
           }}>
             Scan to start
           </div>
@@ -1352,22 +1451,20 @@ const CTAScene: React.FC<{ localFrame: number; duration: number }> = ({ localFra
 
       {/* Lower third — speaker credentials */}
       <div style={{
-        position: 'absolute', bottom: 60, left: 80,
+        position: 'absolute', bottom: 64, left: 80,
         display: 'flex', alignItems: 'center', gap: 20,
-        opacity: lf > 30 ? phaseOpacity(lf, 30, duration, 18) : 0,
+        opacity: phaseOpacity(lf, 30, duration, 18),
       }}>
         <div style={{
           width: 4, height: 56,
-          background: `linear-gradient(180deg, ${BRAND.green}, transparent)`,
+          background: `linear-gradient(180deg, ${BRAND.brightGold}, transparent)`,
         }} />
         <div>
-          <div style={{
-            fontSize: 28, fontWeight: 800, color: BRAND.white, fontFamily: 'sans-serif',
-          }}>
+          <div style={{ fontSize: 28, fontWeight: 800, color: BRAND.white, fontFamily: 'sans-serif' }}>
             Scott Magnacca
           </div>
           <div style={{
-            fontSize: 18, color: BRAND.green, fontFamily: 'sans-serif',
+            fontSize: 17, color: BRAND.brightGold, fontFamily: 'sans-serif',
             letterSpacing: 2, textTransform: 'uppercase',
           }}>
             AI &amp; Storyselling Strategist · SalesForLife.ai
@@ -1375,22 +1472,20 @@ const CTAScene: React.FC<{ localFrame: number; duration: number }> = ({ localFra
         </div>
       </div>
 
-      {/* URL solid bar at very bottom */}
+      {/* URL bar at very bottom */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
-        height: 52, background: BRAND.green,
+        height: 52, background: BRAND.brightGold,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        opacity: lf > 15 ? 1 : lf / 15,
+        opacity: Math.min(1, lf / 18),
       }}>
         <div style={{
-          fontSize: 24, fontWeight: 800, color: BRAND.black,
-          fontFamily: '-apple-system, sans-serif', letterSpacing: 2,
-          textTransform: 'uppercase',
+          fontSize: 22, fontWeight: 800, color: BRAND.black,
+          fontFamily: '-apple-system, sans-serif', letterSpacing: 2, textTransform: 'uppercase',
         }}>
           scottmagnacca.com · 60-Second AI Risk Quiz · Free
         </div>
       </div>
-
       <NoiseOverlay opacity={0.04} />
     </AbsoluteFill>
   );
