@@ -113,14 +113,14 @@ const LearningCurve: React.FC<{
       }}>
         THE LEARNING CURVE
       </div>
-      {/* 2× bigger: 920×560 */}
-      <svg viewBox="0 0 440 300" width="860" height="520">
-        {/* Axes */}
-        <line x1="30" y1="20" x2="30" y2="270" stroke="#ffffff40" strokeWidth="2" />
-        <line x1="30" y1="270" x2="420" y2="270" stroke="#ffffff40" strokeWidth="2" />
-        {/* Axis labels */}
-        <text x="225" y="292" fill="#a0aec090" fontSize="14" textAnchor="middle" fontFamily="sans-serif" fontWeight="600">Time</text>
-        <text x="12" y="145" fill="#a0aec090" fontSize="14" textAnchor="middle" fontFamily="sans-serif" fontWeight="600" transform="rotate(-90 12 145)">Mastery</text>
+      {/* 25% bigger than 2× original: 1075×650 */}
+      <svg viewBox="0 0 440 300" width="1075" height="650">
+        {/* Axes — bright white for clarity */}
+        <line x1="30" y1="20" x2="30" y2="270" stroke="#ffffff" strokeWidth="2.5" />
+        <line x1="30" y1="270" x2="420" y2="270" stroke="#ffffff" strokeWidth="2.5" />
+        {/* Axis labels — bright white */}
+        <text x="225" y="292" fill="#ffffff" fontSize="17" textAnchor="middle" fontFamily="sans-serif" fontWeight="700">Time</text>
+        <text x="12" y="145" fill="#ffffff" fontSize="17" textAnchor="middle" fontFamily="sans-serif" fontWeight="700" transform="rotate(-90 12 145)">Mastery</text>
 
         {/* Traditional path — flat, slow, dashed orange */}
         <path d="M 30 250 C 120 248, 250 235, 415 215"
@@ -130,32 +130,32 @@ const LearningCurve: React.FC<{
         <text x="240" y="228" fill={orange} fontSize="15" textAnchor="middle"
           fontFamily="sans-serif" fontWeight="700" opacity={0.9}>Traditional: 25 years</text>
 
-        {/* Exponential curve — animated, cyan — thicker + glowing */}
+        {/* Exponential curve — gold sparkle */}
         <path
           d="M 30 268 C 180 265, 330 210, 415 22"
-          fill="none" stroke={accentColor} strokeWidth="4.5" strokeLinecap="round"
+          fill="none" stroke="#DDD055" strokeWidth="5" strokeLinecap="round"
           strokeDasharray={pathLength} strokeDashoffset={dashOffset}
-          style={{ filter: `drop-shadow(0 0 10px ${accentColor}) drop-shadow(0 0 20px ${accentColor}80)` }}
+          style={{ filter: `drop-shadow(0 0 ${8 + 6 * Math.sin(lf * 0.12)}px #DDD055) drop-shadow(0 0 ${18 + 10 * Math.sin(lf * 0.09)}px #DDD05580)` }}
         />
 
-        {/* Endpoint dot */}
+        {/* Endpoint dot — gold */}
         {showDot && (
           <circle cx="415" cy="22" r={interpolate(progress, [0.78, 1], [0, 10], { extrapolateRight: 'clamp' })}
-            fill={accentColor} style={{ filter: `drop-shadow(0 0 16px ${accentColor})` }} />
+            fill="#DDD055" style={{ filter: `drop-shadow(0 0 18px #DDD055)` }} />
         )}
 
-        {/* Compressed label */}
+        {/* Compressed label — gold */}
         {showLabel && (
           <g opacity={interpolate(progress, [0.88, 1], [0, 1], { extrapolateRight: 'clamp' })}>
-            <line x1="415" y1="22" x2="350" y2="60" stroke={accentColor} strokeWidth="1.5" strokeDasharray="4 3" opacity="0.8" />
-            <text x="342" y="56" fill={accentColor} fontSize="16" textAnchor="end"
+            <line x1="415" y1="22" x2="350" y2="60" stroke="#DDD055" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.8" />
+            <text x="342" y="56" fill="#DDD055" fontSize="16" textAnchor="end"
               fontFamily="sans-serif" fontWeight="800">Compressed</text>
           </g>
         )}
 
-        {/* Start/end markers */}
-        <text x="30" y="287" fill="#a0aec070" fontSize="13" textAnchor="middle" fontFamily="sans-serif">Start</text>
-        <text x="415" y="287" fill="#a0aec070" fontSize="13" textAnchor="middle" fontFamily="sans-serif">Now</text>
+        {/* Start/end markers — white */}
+        <text x="30" y="287" fill="#ffffff90" fontSize="13" textAnchor="middle" fontFamily="sans-serif">Start</text>
+        <text x="415" y="287" fill="#ffffff90" fontSize="13" textAnchor="middle" fontFamily="sans-serif">Now</text>
       </svg>
     </div>
   );
@@ -202,11 +202,13 @@ const CredentialCard: React.FC<{ opacity: number; colors: VideoColors; accentCol
           <path d="M 52 66 Q 100 57 148 66" fill="none" stroke="#00C04B" strokeWidth="2.5"/>
           {/* South latitude arc */}
           <path d="M 52 134 Q 100 143 148 134" fill="none" stroke="#00C04B" strokeWidth="2.5"/>
-          {/* Arrow sweeping lower-left → upper-right (gold accent = growth momentum) */}
-          <path d="M 22 175 Q 30 158 50 148 L 172 28"
-            fill="none" stroke="#DDD055" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round"/>
-          {/* Arrowhead */}
-          <polygon points="172,28 146,35 160,57" fill="#DDD055"/>
+          {/* Orbital arrow: arcs from lower-left around globe bottom, shoots upper-right */}
+          <path d="M 18 168 C 55 205, 145 205, 182 32"
+            fill="none" stroke="#DDD055" strokeWidth="10" strokeLinecap="round"
+            style={{ filter: `drop-shadow(0 0 6px #DDD055)` }}/>
+          {/* Arrowhead — pointing along curve direction at upper-right */}
+          <polygon points="182,32 169,46 189,50" fill="#DDD055"
+            style={{ filter: `drop-shadow(0 0 6px #DDD055)` }}/>
         </svg>
       </div>
       <div style={{
@@ -244,22 +246,33 @@ const CredentialCard: React.FC<{ opacity: number; colors: VideoColors; accentCol
 const YearsFlash: React.FC<{ opacity: number; colors: VideoColors }> = ({ opacity, colors }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  // "25 YEARS" slams in first, then "IN FINANCIAL SERVICES" fades below
-  const numEnt = spring({ frame: Math.max(0, frame - 125), fps, config: { damping: 10, stiffness: 120 } });
+  // Count up 1→25 over 3 seconds (90 frames) starting at f125, then flash at f215
+  const countStart = 125;
+  const countEnd   = 215;  // 90 frames = 3s at 30fps
+  const cf = Math.max(0, frame - countStart);
+  const currentNum = frame < countEnd
+    ? Math.round(interpolate(frame, [countStart, countEnd], [1, 25], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }))
+    : 25;
+  // Flash pulse when counter hits 25 (frames 215–255)
+  const flashF = Math.max(0, frame - countEnd);
+  const flashT = flashF < 40 ? Math.abs(Math.sin(flashF * Math.PI / 10)) : 0;
+  const flashScale = 1 + 0.18 * flashT;
+  const flashGlow  = 1 + 3.0  * flashT;
+  const numEnt = spring({ frame: cf, fps, config: { damping: 10, stiffness: 120 } });
   const labelEnt = spring({ frame: Math.max(0, frame - 162), fps, config: { damping: 14, stiffness: 80 } });
 
   return (
     <div style={{ opacity, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-      {/* "25" — large, punchy */}
+      {/* Counter / "25" — large, punchy, counts up then flashes */}
       <div style={{
         fontSize: 160, fontWeight: 900, color: '#ffffff', lineHeight: 1,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
         opacity: numEnt,
-        transform: `scale(${interpolate(numEnt, [0, 1], [0.5, 1])})`,
-        textShadow: `0 0 30px #ffffff80, 0 0 60px #ffffff40`,
+        transform: `scale(${interpolate(numEnt, [0, 1], [0.5, 1]) * flashScale})`,
+        textShadow: `0 0 ${30 * flashGlow}px #ffffff80, 0 0 ${60 * flashGlow}px #DDD05540`,
         letterSpacing: -8,
       }}>
-        25
+        {currentNum}
       </div>
       {/* "YEARS" */}
       <div style={{

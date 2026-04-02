@@ -43,20 +43,25 @@ const BRAND = {
 };
 
 // ─── Scene boundaries — all derived from Whisper × 30fps ─────────────────────
-// Audio: 147.048s → 4412 frames. Buffer to 4420.
+// Audio v5: 150.960s → 4529 frames. Buffer to 4540.
+// New: TwoSignsScene inserted between MayaScene and CTAScene (2026-04-02)
+//   "These two signs say" at f4232 | "Make me feel important" f4272 | "treat me like a friend" f4321
+//   "Take the sixty-second quiz" at f4369
 const SCENE = {
-  HOOK_START:   0,
-  HOOK_END:     840,    // "He read the invisible sign" at f811
-  S1_START:     840,
-  S1_END:       2050,   // "Here's the question" at f2028
-  S2_START:     2050,
-  S2_END:       2700,   // "the hardest" at f2682
-  S3_START:     2700,
-  S3_END:       3280,   // "matter most" at f3276
-  STORY_START:  3280,
-  STORY_END:    4100,   // "Every client" at f4077
-  CTA_START:    4100,
-  CTA_END:      4420,
+  HOOK_START:      0,
+  HOOK_END:        840,    // "He read the invisible sign" at f811
+  S1_START:        840,
+  S1_END:          2050,   // "Here's the question" at f2028
+  S2_START:        2050,
+  S2_END:          2700,   // "the hardest" at f2682
+  S3_START:        2700,
+  S3_END:          3280,   // "matter most" at f3276
+  STORY_START:     3280,
+  STORY_END:       4232,   // extended: "Every client... listening for it." now runs to ~f4220
+  TWOSIGNS_START:  4232,   // "These two signs say" at f4232
+  TWOSIGNS_END:    4369,   // "Take the sixty-second quiz" at f4369
+  CTA_START:       4369,
+  CTA_END:         4540,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -178,13 +183,13 @@ const RefusalWall: React.FC<{ opacity: number }> = ({ opacity }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const lines = [
-    { text: '"I need to think about it."', bold: true },
-    { text: 'Better data. Better numbers.', bold: false },
-    { text: '"I need to think about it."', bold: true },
-    { text: 'Better returns. Still losing.', bold: false },
-    { text: '"I need to think about it."', bold: true },
-    { text: 'Not the right time.', bold: false },
-    { text: '"I need to think about it."', bold: true },
+    { text: '"I need to think about it."', bold: true,  gold: false },
+    { text: 'Better data. Better numbers.', bold: false, gold: true },
+    { text: '"I need to think about it."', bold: true,  gold: false },
+    { text: 'Better returns. Still losing.', bold: false, gold: true },
+    { text: '"I need to think about it."', bold: true,  gold: false },
+    { text: 'Not the right time.', bold: false, gold: false },
+    { text: '"I need to think about it."', bold: true,  gold: false },
   ];
   return (
     <div style={{
@@ -200,20 +205,27 @@ const RefusalWall: React.FC<{ opacity: number }> = ({ opacity }) => {
         const pulse = frame >= 178 && line.bold
           ? 1.0 + 0.12 * Math.sin((frame - 178) * 0.1 + i)
           : 1.0;
+        const goldPulse = line.gold
+          ? 1.0 + 0.15 * Math.sin(frame * 0.08 + i * 0.7)
+          : 1.0;
+        const lineColor = line.bold ? BRAND.white : line.gold ? BRAND.brightGold : BRAND.textSecondary;
+        const lineOpacity = line.bold ? 1.0 : line.gold ? 0.92 : 0.38;
         return (
           <div key={i} style={{
-            opacity: ent * (line.bold ? 1.0 : 0.38),
+            opacity: ent * lineOpacity,
             transform: `translateX(${interpolate(ent, [0, 1], [-40, 0])}px)`,
             fontSize: line.bold ? 44 : 28,
-            fontWeight: line.bold ? 900 : 400,
+            fontWeight: line.bold ? 900 : line.gold ? 700 : 400,
             fontStyle: line.bold ? 'normal' : 'italic',
-            color: line.bold ? BRAND.white : BRAND.textSecondary,
+            color: lineColor,
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            borderLeft: line.bold ? `4px solid ${BRAND.brightGold}` : '4px solid transparent',
+            borderLeft: line.bold ? `4px solid ${BRAND.brightGold}` : line.gold ? `4px solid ${BRAND.brightGold}80` : '4px solid transparent',
             paddingLeft: 20,
             textShadow: line.bold
               ? `0 0 ${20 * pulse}px ${BRAND.brightGold}50`
-              : 'none',
+              : line.gold
+                ? `0 0 ${16 * goldPulse}px ${BRAND.brightGold}70, 0 0 ${30 * goldPulse}px ${BRAND.mangoPunch}40`
+                : 'none',
           }}>
             {line.text}
           </div>
@@ -303,12 +315,6 @@ const InvisibleSignSlam: React.FC<{ opacity: number }> = ({ opacity }) => {
       opacity, display: 'flex', flexDirection: 'column',
       alignItems: 'center', gap: 10,
     }}>
-      <div style={{
-        fontSize: 20, color: BRAND.textSecondary, letterSpacing: 4,
-        textTransform: 'uppercase', fontFamily: 'sans-serif', marginBottom: 4,
-      }}>
-        He read
-      </div>
       {wordDefs.map((w, i) => {
         const wf = Math.max(0, frame - w.whisperFrame);
         const ent = spring({ frame: wf, fps, config: { damping: 9, stiffness: 120 } });
@@ -388,8 +394,9 @@ const HookScene: React.FC<{ localFrame: number; duration: number }> = ({ localFr
   //   lf 800→840: Title card   (transitions into scene 1)
   const op1 = phaseOpacity(lf, 0,   335, 22);
   const op2 = phaseOpacity(lf, 315, 770, 22);
-  const op3 = phaseOpacity(lf, 750, 825, 18);
-  const op4 = phaseOpacity(lf, 800, duration, 16);
+  // op3 starts at 775 (after op2 fully fades at 770) to avoid overlap, 12-frame fade for snap
+  // TitleCard (op4) removed — it flashed too briefly to read; op3 holds to end of hook
+  const op3 = phaseOpacity(lf, 775, duration, 12);
 
   return (
     <SceneBg>
@@ -403,7 +410,6 @@ const HookScene: React.FC<{ localFrame: number; duration: number }> = ({ localFr
         {op1 > 0.01 && <div style={{ position: 'absolute' }}><RefusalWall opacity={op1} /></div>}
         {op2 > 0.01 && <div style={{ position: 'absolute' }}><LucasQuote opacity={op2} /></div>}
         {op3 > 0.01 && <div style={{ position: 'absolute' }}><InvisibleSignSlam opacity={op3} /></div>}
-        {op4 > 0.01 && <div style={{ position: 'absolute' }}><TitleCard opacity={op4} /></div>}
       </div>
       <NoiseOverlay opacity={0.04} />
     </SceneBg>
@@ -529,6 +535,22 @@ const ThreeSignsScene: React.FC<{ localFrame: number; duration: number }> = ({ l
             position: 'absolute', opacity: opIntro,
             display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1050,
           }}>
+            {/* ROLE THEORY label — appears at lf27 (Whisper: "every person walks") and stays */}
+            <div style={{
+              fontSize: 18, letterSpacing: 7, fontWeight: 800, textTransform: 'uppercase',
+              color: BRAND.brightGold,
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+              padding: '8px 28px',
+              border: `1px solid ${BRAND.brightGold}55`,
+              borderRadius: 5,
+              background: `rgba(221,208,85,0.07)`,
+              display: 'inline-flex', alignSelf: 'flex-start',
+              opacity: Math.min(1, Math.max(0, (lf - 27) / 14)),
+              textShadow: `0 0 16px ${BRAND.brightGold}55`,
+              boxShadow: `0 0 18px ${BRAND.brightGold}15`,
+            }}>
+              ROLE THEORY
+            </div>
             <div style={{
               fontSize: 56, fontWeight: 900, color: BRAND.white,
               fontFamily: '-apple-system, sans-serif', lineHeight: 1.2,
@@ -680,14 +702,15 @@ const MagicQuestionScene: React.FC<{ localFrame: number; duration: number }> = (
 
   const brollIdentity = lf > 245;
 
-  // Word-by-word build: WHAT(74) ARE(78) YOU(79) MOST(80) PROUD(85) OF?(92) — exact Whisper frames
+  // Word-by-word build: "WHAT(74) ARE(78) YOU(79) MOST(80) PROUD(85) OF?"(92) — exact Whisper frames
+  // Quote marks added to first and last words per Scott's request
   const questionWords = [
-    { text: 'WHAT',  frame: 74,  size: 92,  color: BRAND.white },
-    { text: 'ARE',   frame: 78,  size: 80,  color: BRAND.white },
-    { text: 'YOU',   frame: 79,  size: 80,  color: BRAND.white },
-    { text: 'MOST',  frame: 80,  size: 92,  color: BRAND.white },
-    { text: 'PROUD', frame: 85,  size: 120, color: BRAND.brightGold }, // gold sparkle for PROUD
-    { text: 'OF?',   frame: 92,  size: 80,  color: BRAND.white },
+    { text: '\u201cWHAT', frame: 74,  size: 92,  color: BRAND.white },
+    { text: 'ARE',        frame: 78,  size: 80,  color: BRAND.white },
+    { text: 'YOU',        frame: 79,  size: 80,  color: BRAND.white },
+    { text: 'MOST',       frame: 80,  size: 92,  color: BRAND.white },
+    { text: 'PROUD',      frame: 85,  size: 120, color: BRAND.brightGold }, // gold sparkle for PROUD
+    { text: 'OF?\u201d',  frame: 92,  size: 80,  color: BRAND.white },
   ];
 
   return (
@@ -1017,6 +1040,18 @@ const SilenceScene: React.FC<{ localFrame: number; duration: number }> = ({ loca
               ].map((step) => {
                 const sf = Math.max(0, lf - step.frame);
                 const ent = spring({ frame: sf, fps: 30, config: { damping: 14, stiffness: 80 } });
+                // Step 4 sub text pulses gold when narrator says "those words matter most" (~lf540)
+                const isStep4 = step.num === '4';
+                const pulseLf4 = Math.max(0, lf - 540);
+                const pulseT4 = isStep4 && pulseLf4 < 80
+                  ? Math.abs(Math.cos(pulseLf4 * Math.PI / 40))
+                  : 0;
+                const subColor = isStep4 && lf >= 540
+                  ? `rgb(${Math.round(255 - 34 * pulseT4)}, ${Math.round(255 - 47 * pulseT4)}, ${Math.round(255 - 170 * pulseT4)})`
+                  : BRAND.textSecondary;
+                const subGlow = pulseT4 > 0.05
+                  ? `0 0 ${20 * pulseT4}px ${BRAND.brightGold}90, 0 0 ${36 * pulseT4}px ${BRAND.mangoPunch}55`
+                  : 'none';
                 return (
                   <div key={step.num} style={{
                     flex: 1, padding: '30px 26px',
@@ -1043,9 +1078,10 @@ const SilenceScene: React.FC<{ localFrame: number; duration: number }> = ({ loca
                       {step.label}
                     </div>
                     <div style={{
-                      fontSize: 18, color: BRAND.textSecondary,
+                      fontSize: 18, color: subColor,
                       fontFamily: 'sans-serif', textAlign: 'center',
                       lineHeight: 1.4, fontStyle: 'italic',
+                      textShadow: subGlow,
                     }}>
                       {step.sub}
                     </div>
@@ -1318,7 +1354,151 @@ const MayaScene: React.FC<{ localFrame: number; duration: number }> = ({ localFr
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SCENE 6 — CTA  (global f4100–f4420)
+// SCENE 6 — TWO SIGNS  (global f4232–f4369)
+// Whisper frames (local, abs − 4232):
+//   lf0: "these two signs say"
+//   lf40: "make me feel important"
+//   lf89: "treat me like a friend"
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Stylized person + hanging cardboard sign (inspired by user sketch)
+const PersonSign: React.FC<{
+  enterFrame: number;
+  signText: string[];
+  signColor: string;
+  lf: number;
+  side: 'left' | 'right';
+}> = ({ enterFrame, signText, signColor, lf, side }) => {
+  const { fps } = useVideoConfig();
+  const sf = Math.max(0, lf - enterFrame);
+  const ent = spring({ frame: sf, fps, config: { damping: 13, stiffness: 65 } });
+  // Gentle pendulum swing on entrance
+  const swing = side === 'left'
+    ? interpolate(sf, [0, 25, 45, 65, 80], [-6, 5, -2, 1, 0], { extrapolateRight: 'clamp' })
+    : interpolate(sf, [0, 25, 45, 65, 80], [6, -5, 2, -1, 0], { extrapolateRight: 'clamp' });
+  const glow = 0.6 + 0.25 * Math.sin(lf * 0.06 + (side === 'left' ? 0 : 1.5));
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      opacity: ent,
+      transform: `scale(${interpolate(ent, [0, 1], [0.75, 1])}) translateY(${interpolate(ent, [0, 1], [50, 0])}px)`,
+    }}>
+      {/* Person silhouette — SVG head + body */}
+      <svg width="140" height="200" viewBox="0 0 140 200" style={{ overflow: 'visible' }}>
+        {/* Head */}
+        <circle cx="70" cy="42" r="32" fill={signColor} opacity="0.18"
+          style={{ filter: `drop-shadow(0 0 12px ${signColor}60)` }}/>
+        <circle cx="70" cy="42" r="32" fill="none" stroke={signColor} strokeWidth="3" opacity="0.70"/>
+        {/* Neck */}
+        <line x1="70" y1="74" x2="70" y2="94" stroke={signColor} strokeWidth="4" opacity="0.55" strokeLinecap="round"/>
+        {/* Shoulders */}
+        <path d="M 20 120 C 30 94 50 90 70 90 C 90 90 110 94 120 120"
+          fill="none" stroke={signColor} strokeWidth="4" opacity="0.60" strokeLinecap="round"/>
+        {/* Body torso */}
+        <line x1="70" y1="90" x2="70" y2="175" stroke={signColor} strokeWidth="4" opacity="0.45" strokeLinecap="round"/>
+        {/* Arms holding sign — angled down and in */}
+        <path d="M 30 122 L 48 160" stroke={signColor} strokeWidth="4" opacity="0.55" strokeLinecap="round"/>
+        <path d="M 110 122 L 92 160" stroke={signColor} strokeWidth="4" opacity="0.55" strokeLinecap="round"/>
+        {/* Legs */}
+        <path d="M 70 175 L 52 200" stroke={signColor} strokeWidth="4" opacity="0.40" strokeLinecap="round"/>
+        <path d="M 70 175 L 88 200" stroke={signColor} strokeWidth="4" opacity="0.40" strokeLinecap="round"/>
+      </svg>
+
+      {/* Sign rope / chain strings */}
+      <div style={{ display: 'flex', gap: 56, marginBottom: -2, marginTop: -4 }}>
+        {[0, 1].map(i => (
+          <div key={i} style={{
+            width: 2.5, height: 32, background: `${signColor}55`, borderRadius: 2,
+            transform: `rotate(${swing * 0.4}deg)`,
+          }} />
+        ))}
+      </div>
+
+      {/* Cardboard sign */}
+      <div style={{
+        width: 300, minHeight: 140,
+        background: `rgba(221,208,85,0.04)`,
+        border: `2.5px solid ${signColor}70`,
+        borderRadius: 8,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 6, padding: '22px 24px',
+        transform: `rotate(${swing * 0.6}deg)`,
+        boxShadow: `0 0 ${28 * glow}px ${signColor}25, inset 0 0 20px ${signColor}08`,
+      }}>
+        {signText.map((line, i) => (
+          <div key={i} style={{
+            fontSize: 38, fontWeight: 900, color: signColor,
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            textAlign: 'center', letterSpacing: 2, textTransform: 'uppercase', lineHeight: 1.1,
+            textShadow: `0 0 ${16 * glow}px ${signColor}90, 0 0 ${32 * glow}px ${signColor}50`,
+          }}>
+            {line}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const TwoSignsScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame: lf, duration }) => {
+  // Header fades in at lf=0 ("these two signs say")
+  const opHeader = Math.min(1, Math.max(0, lf / 18));
+  const glow = 0.5 + 0.3 * Math.sin(lf * 0.04);
+
+  return (
+    <SceneBg>
+      <ParticleField color={BRAND.green} count={16} seed={99} intensity={0.45} />
+
+      <div style={{
+        position: 'absolute', left: 0, top: 0, width: 1920, height: 1080,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 40,
+      }}>
+
+        {/* Header — "Every client already wearing one of two signs" */}
+        <div style={{
+          opacity: opHeader,
+          fontSize: 36, fontWeight: 700, color: BRAND.textSecondary,
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          letterSpacing: 2, textAlign: 'center', maxWidth: 1200,
+          transform: `translateY(${interpolate(opHeader, [0, 1], [-20, 0])}px)`,
+        }}>
+          Every client you will ever meet is already telling you who they are.{' '}
+          <span style={{
+            color: BRAND.brightGold,
+            textShadow: `0 0 ${18 * glow}px ${BRAND.brightGold}80`,
+          }}>
+            These two signs say it all.
+          </span>
+        </div>
+
+        {/* Two person+sign graphics */}
+        <div style={{ display: 'flex', gap: 120, alignItems: 'flex-start' }}>
+          <PersonSign
+            enterFrame={40}
+            signText={['MAKE ME FEEL', 'IMPORTANT']}
+            signColor={BRAND.brightGold}
+            lf={lf}
+            side="left"
+          />
+          <PersonSign
+            enterFrame={89}
+            signText={['TREAT ME LIKE', 'A FRIEND']}
+            signColor={BRAND.greenLight}
+            lf={lf}
+            side="right"
+          />
+        </div>
+      </div>
+
+      <NoiseOverlay opacity={0.04} />
+    </SceneBg>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SCENE 7 — CTA  (global f4369–f4540)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const CTAScene: React.FC<{ localFrame: number; duration: number }> = ({ localFrame: lf, duration }) => {
@@ -1555,6 +1735,9 @@ export const InvisibleSignVideo: React.FC<{ audioSrc?: string }> = ({
       </Sequence>
       <Sequence from={SCENE.STORY_START} durationInFrames={SCENE.STORY_END - SCENE.STORY_START}>
         <MayaScene localFrame={frame - SCENE.STORY_START} duration={SCENE.STORY_END - SCENE.STORY_START} />
+      </Sequence>
+      <Sequence from={SCENE.TWOSIGNS_START} durationInFrames={SCENE.TWOSIGNS_END - SCENE.TWOSIGNS_START}>
+        <TwoSignsScene localFrame={frame - SCENE.TWOSIGNS_START} duration={SCENE.TWOSIGNS_END - SCENE.TWOSIGNS_START} />
       </Sequence>
       <Sequence from={SCENE.CTA_START} durationInFrames={SCENE.CTA_END - SCENE.CTA_START}>
         <CTAScene localFrame={frame - SCENE.CTA_START} duration={SCENE.CTA_END - SCENE.CTA_START} />

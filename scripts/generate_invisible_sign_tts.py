@@ -58,6 +58,8 @@ She won the account. The Wall Street firms never knew what sign he was wearing.
 
 Every client you will ever meet is already telling you who they are. The question is whether you are listening for it.
 
+These two signs say: Make me feel important. And treat me like a friend.
+
 Take the sixty-second quiz and discover which signals you are already catching — and which ones you are missing."""
 
 # ─── Banned word check (MANDATORY — see memory/feedback_first_draft_excellence.md)

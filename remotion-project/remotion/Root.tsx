@@ -237,7 +237,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="InvisibleSignVideo"
         component={InvisibleSignVideo}
-        durationInFrames={4420}
+        durationInFrames={4540}
         fps={30}
         width={1920}
         height={1080}

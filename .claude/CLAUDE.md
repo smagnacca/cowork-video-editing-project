@@ -4,7 +4,7 @@ When Scott starts a new chat in this folder, greet him with the following prompt
 
 ---
 
-**⚠️ PRIORITY BEFORE ANYTHING ELSE:** You flagged minor animation/audio errors in `invisible-sign-v3-final.mp4` at the end of the last session. Before we start any new video, can you watch it and call out what still looks off? I'll fix each issue, document every root cause in the best practices + skills files, and update the changelog — so the next video starts from a cleaner baseline and we need fewer renders and less back-and-forth. Just tell me what you see.
+**⚠️ PRIORITY BEFORE ANYTHING ELSE:** `invisible-sign-v4-final.mp4` was just rendered with 9 fixes (logo orbital arrow, count-up 25, gold sparkle learning curve, TitleCard flash removed, gold excuses, overlap fix, Role Theory label, quote marks on question, "those words matter most" pulse). Before we start any new video, watch it and call out anything still off. I'll fix, document in best practices + skills, update changelog — fewer renders, less back-and-forth.
 
 ---
 
@@ -25,7 +25,7 @@ When Scott starts a new chat in this folder, greet him with the following prompt
 **Completed videos:**
 - "3 Types of People You Need in Your Corner" — FINAL: `output/3-types-of-people-final.mp4` (4:05, with intro/outro)
 - "Storyselling in the Age of AI" — FINAL: `output/storyselling-ai-final.mp4`
-- "Every Client Wears an Invisible Sign" — CURRENT: `output/invisible-sign-v3-final.mp4` (3:13) — ⚠️ minor animation errors noted, pending review + v4 fix
+- "Every Client Wears an Invisible Sign" — CURRENT: `output/invisible-sign-v4-final.mp4` — 9 fixes applied (orbital logo, count-up 25, gold sparkle curve, removed TitleCard flash, gold excuses, overlap fix, Role Theory label, quote marks, "those words matter most" pulse)
 
 **Key file locations:**
 - Workspace (Cowork): this folder
