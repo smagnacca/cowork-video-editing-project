@@ -150,20 +150,51 @@ const QuizCard: React.FC<{
     'Minimal Routine / Highly Unique',
   ];
 
+  // Gold border draw: animates over ~5.8s (175 frames) once card enters
+  const borderProgress = Math.min(1, Math.max(0, lf) / 175);
+  // Perimeter of 680×390 rounded rect ≈ 2180px (use 2200 for dash safety)
+  const BORDER_PERIMETER = 2200;
+
   return (
     <div style={{
       opacity: opacity * ent,
-      transform: `translateY(${interpolate(ent, [0, 1], [30, 0])}px)`,
+      // 175% bigger: scale(1.75) — overflows left panel into avatar area for dramatic CTA
+      transform: `translateY(${interpolate(ent, [0, 1], [30, 0])}px) scale(1.75)`,
+      transformOrigin: 'center center',
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
     }}>
       <div style={{
         width: 680, padding: '22px 28px',
+        position: 'relative',
         background: 'rgba(10,14,26,0.97)',
         border: `1px solid ${accentColor}70`,
         borderRadius: 16,
         boxShadow: `0 0 ${35 * glow}px ${accentColor}45, 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)`,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}>
+        {/* Animated gold border — draws clockwise over ~5.8s */}
+        {borderProgress > 0 && (
+          <svg
+            style={{
+              position: 'absolute', top: -4, left: -4,
+              width: 688, height: 400,
+              pointerEvents: 'none', overflow: 'visible', zIndex: 10,
+            }}
+            viewBox="0 0 688 400"
+          >
+            <rect
+              x="3" y="3" width="682" height="394" rx="18"
+              fill="none"
+              stroke="#DDD055"
+              strokeWidth="5"
+              strokeDasharray={BORDER_PERIMETER}
+              strokeDashoffset={BORDER_PERIMETER * (1 - borderProgress)}
+              style={{
+                filter: 'drop-shadow(0 0 10px #DDD055) drop-shadow(0 0 22px #EEAF0080)',
+              }}
+            />
+          </svg>
+        )}
         {/* Badge */}
         <div style={{
           textAlign: 'center', fontSize: 11, fontWeight: 700,

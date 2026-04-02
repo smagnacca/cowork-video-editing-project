@@ -1371,14 +1371,53 @@ const CTAScene: React.FC<{ localFrame: number; duration: number }> = ({ localFra
           }}>
             Every Client is Already Telling You
           </div>
-          {/* Color-wave headline */}
-          <ColorWaveText
-            text="Are You Listening For It?"
-            fontSize={62}
-            startFrame={0}
-            speed={0.04}
-            fontWeight={900}
-          />
+          {/* Typewriter headline + gold→white double pulse on "Listening" */}
+          {(() => {
+            // Each character fades in at 3-frame intervals, 6-frame fade
+            // "Are You " = 8 chars (0-7)  → lf 0–21
+            // "Listening" = 9 chars (0-8) → lf 24–48
+            // " For It?" = 8 chars (0-7)  → lf 51–72   (fully typed at lf≈78)
+            // Pulse starts at lf=90: 2 gold→white cycles (|cos| over 40-frame half-period)
+            const pulseStart = 90;
+            const pulseDuration = 80; // 2 cycles × 40 frames each
+            const pulseLf = Math.max(0, lf - pulseStart);
+            const pulseActive = lf >= pulseStart && lf < pulseStart + pulseDuration;
+            // |cos| starts at 1 (gold), dips to 0 (white), peaks at 1 (gold), 0 (white) — 2 cycles
+            const pulseT = pulseActive ? Math.abs(Math.cos(pulseLf * Math.PI / 40)) : 0;
+            // Interpolate #DDD055 (gold=221,208,85) → #ffffff (255,255,255)
+            const lR = Math.round(255 - 34 * pulseT);
+            const lG = Math.round(255 - 47 * pulseT);
+            const lB = Math.round(255 - 170 * pulseT);
+            const listeningColor = lf >= pulseStart ? `rgb(${lR},${lG},${lB})` : BRAND.white;
+            const listeningGlow = pulseT > 0.05
+              ? `0 0 ${18 * pulseT}px #DDD055, 0 0 ${36 * pulseT}px #EEAF0070`
+              : 'none';
+
+            const charStyle = (globalCharIndex: number, overrideColor?: string, overrideGlow?: string) => {
+              const charLf = Math.max(0, lf - globalCharIndex * 3);
+              return {
+                opacity: Math.min(1, charLf / 6),
+                color: overrideColor ?? BRAND.white,
+                textShadow: overrideGlow,
+                fontSize: 62, fontWeight: 900 as const,
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                display: 'inline-block',
+              };
+            };
+            return (
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', lineHeight: 1.2 }}>
+                {'Are You '.split('').map((ch, i) => (
+                  <span key={`p1${i}`} style={charStyle(i)}>{ch === ' ' ? '\u00A0' : ch}</span>
+                ))}
+                {'Listening'.split('').map((ch, i) => (
+                  <span key={`p2${i}`} style={charStyle(8 + i, listeningColor, listeningGlow)}>{ch}</span>
+                ))}
+                {' For It?'.split('').map((ch, i) => (
+                  <span key={`p3${i}`} style={charStyle(17 + i)}>{ch === ' ' ? '\u00A0' : ch}</span>
+                ))}
+              </div>
+            );
+          })()}
           <div style={{
             fontSize: 28, color: BRAND.textSecondary, fontFamily: 'sans-serif', lineHeight: 1.45,
           }}>

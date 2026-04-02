@@ -174,15 +174,40 @@ const CredentialCard: React.FC<{ opacity: number; colors: VideoColors; accentCol
       transform: `translateY(${interpolate(ent, [0, 1], [20, 0])}px)`,
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24,
     }}>
-      {/* Logo ring — 2× larger */}
+      {/* salesforlife.ai logo — bright green globe + gold arrow on black */}
       <div style={{
-        width: 160, height: 160, borderRadius: '50%',
-        border: `3px solid ${accentColor}60`, background: `${accentColor}10`,
+        width: 180, height: 180, borderRadius: '50%',
+        background: '#000000',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: `0 0 ${50 * glow}px ${accentColor}50, 0 0 ${80 * glow}px ${accentColor}25`,
-        fontSize: 72,
+        boxShadow: [
+          `0 0 ${50 * glow}px #00C04B50`,
+          `0 0 ${80 * glow}px #DDD05520`,
+          `inset 0 0 30px #00000080`,
+        ].join(', '),
       }}>
-        🧠
+        <svg viewBox="0 0 200 200" width="150" height="150" style={{
+          filter: `drop-shadow(0 0 ${10 * glow}px #00C04B) drop-shadow(0 0 ${22 * glow}px #00C04B60)`,
+        }}>
+          {/* Globe outer ring */}
+          <circle cx="100" cy="100" r="72" fill="none" stroke="#00C04B" strokeWidth="7"/>
+          {/* Vertical meridian */}
+          <line x1="100" y1="28" x2="100" y2="172" stroke="#00C04B" strokeWidth="3.5"/>
+          {/* Horizontal equator */}
+          <line x1="28" y1="100" x2="172" y2="100" stroke="#00C04B" strokeWidth="3.5"/>
+          {/* Left longitude arc */}
+          <path d="M 100 28 Q 52 100 100 172" fill="none" stroke="#00C04B" strokeWidth="3"/>
+          {/* Right longitude arc */}
+          <path d="M 100 28 Q 148 100 100 172" fill="none" stroke="#00C04B" strokeWidth="3"/>
+          {/* North latitude arc */}
+          <path d="M 52 66 Q 100 57 148 66" fill="none" stroke="#00C04B" strokeWidth="2.5"/>
+          {/* South latitude arc */}
+          <path d="M 52 134 Q 100 143 148 134" fill="none" stroke="#00C04B" strokeWidth="2.5"/>
+          {/* Arrow sweeping lower-left → upper-right (gold accent = growth momentum) */}
+          <path d="M 22 175 Q 30 158 50 148 L 172 28"
+            fill="none" stroke="#DDD055" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round"/>
+          {/* Arrowhead */}
+          <polygon points="172,28 146,35 160,57" fill="#DDD055"/>
+        </svg>
       </div>
       <div style={{
         fontSize: 52, fontWeight: 800, color: colors.textPrimary,
@@ -267,9 +292,17 @@ const YearsFlash: React.FC<{ opacity: number; colors: VideoColors }> = ({ opacit
 };
 
 // ─── Phase 4: Gold sparkle words for "change the way..." ─────────────────────
-const ChangeWords: React.FC<{ opacity: number; accentColor: string }> = ({ opacity, accentColor }) => {
+const ChangeWords: React.FC<{ opacity: number; accentColor: string; startFrame?: number }> = ({ opacity, accentColor, startFrame = 476 }) => {
   // Whisper timestamps relative to when Scott says "change" (f535) and subsequent words
   // Stagger each word group in at its whisper-timed frame
+  const frame = useCurrentFrame();
+  const pulseLf = Math.max(0, frame - startFrame);
+  // Single gold pulse on entrance (half-sine over 45 frames ≈ 1.5s)
+  const onePulse = pulseLf < 45 ? Math.sin(pulseLf * Math.PI / 45) : 0;
+  const potentialShadow = onePulse > 0.01
+    ? `0 0 ${28 * onePulse}px #DDD055, 0 0 ${55 * onePulse}px #EEAF0070, 0 0 ${90 * onePulse}px #EEAF0030`
+    : '0 0 10px #DDD05445';
+
   const lines = [
     { words: ['CHANGE THE WAY'], startFrame: 535 },
     { words: ['YOU WORK,'], startFrame: 557 },
@@ -282,13 +315,17 @@ const ChangeWords: React.FC<{ opacity: number; accentColor: string }> = ({ opaci
     <div style={{
       opacity,
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      gap: 8, maxWidth: 780,
+      gap: 8, maxWidth: 880,
     }}>
+      {/* THE POTENTIAL TO — 200% bigger, bold, bright gold, single entrance pulse */}
       <div style={{
-        fontSize: 14, color: '#a0aec0', letterSpacing: 3, textTransform: 'uppercase',
-        fontFamily: 'sans-serif', marginBottom: 4, opacity: 0.7,
+        fontSize: 42, fontWeight: 900, color: '#DDD055',
+        letterSpacing: 3, textTransform: 'uppercase',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        marginBottom: 8,
+        textShadow: potentialShadow,
       }}>
-        The potential to
+        THE POTENTIAL TO
       </div>
       {lines.map((line, li) => (
         <SparkleWords
@@ -444,7 +481,7 @@ export const IntroScene: React.FC<{
         {/* Phase 4: Sparkle words */}
         {op4 > 0.01 && (
           <div style={{ position: 'absolute' }}>
-            <ChangeWords opacity={op4} accentColor={colors.accent2} />
+            <ChangeWords opacity={op4} accentColor={colors.accent2} startFrame={476} />
           </div>
         )}
 
