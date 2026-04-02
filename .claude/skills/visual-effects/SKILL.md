@@ -210,6 +210,107 @@ Bloom: spread-radius 30–80px, opacity 0.3–0.6
 
 ---
 
+## Advanced Animation Design Catalog (ADDED 2026-04-02 — Lusion/VantaJS Research)
+
+> Sourced from: akari.lusion.co (2D light-tracing / WebGL), vantajs.com (fluid background effects), and Scott's animation design brief. All techniques adapted for Remotion video composition.
+
+### Category 1 — Frame-Triggered Storytelling (Scroll-Trigger equivalent)
+
+In video, there is no scroll — frame number IS the scroll position. Every animation trigger must be tied to a Whisper timestamp frame, not estimated.
+
+| Technique | Description | Remotion Implementation | Best For |
+|-----------|-------------|------------------------|----------|
+| **Frame-Triggered Reveals** | Content activates at precise audio moments (equivalent to scroll-triggered web animation) | `phaseOpacity(frame, enterF, exitF, fade=18)` — all values from Whisper timestamps | Scene transitions, text reveals, B-roll entry |
+| **Staggered Word Build** | Words/chars enter sequentially, each at its Whisper timestamp | `Math.max(0, frame - (startFrame + i*stagger))` per word; spring physics per word | Key phrase reveals, archetype names, CTA |
+| **Char-by-Char Typewriter** | Text types itself out character by character | 3-frame stagger per char, 6-frame fade-in: `Math.min(1, charLf/6)` | CTA headlines, "What are you most proud of?", mic-drop phrases |
+| **Progressive Section Reveal** | Long content reveals in phases tied to audio beats | Multiple `phaseOpacity` windows with crossfade, each Whisper-timed | Story scenes with multiple beats |
+
+### Category 2 — Parallax Depth Effects
+
+Foreground and background move at different speeds to create perceived 3D depth.
+
+| Technique | Description | Remotion Implementation | Best For |
+|-----------|-------------|------------------------|----------|
+| **Layer Speed Parallax** | Cards/text at 1× speed, particles at 0.5×, deep BG at 0.2× | `transform: translateY(frame × speed × multiplier)` per layer | Hook scenes, epic reveals |
+| **Z-Depth Scaling** | Elements grow as they "approach" — scale 0.85→1.0 as content enters | Spring-based scale from 0.85 to 1.0 with `damping: 16, stiffness: 60` | Card entrances, archetype reveals |
+| **Ken Burns on B-Roll** | Slow zoom into a still image or video clip | `transform: scale(${1 + progress * 0.08})` over the clip duration | B-roll opening shots, establishing scenes |
+| **Foreground Crop Blur** | Nearest layer blurs while far layer stays sharp | CSS `filter: blur(${lerp(3,0,ent)}px)` fading out as element enters | Scene transitions, depth reveals |
+
+### Category 3 — Fluid Background Animations (VantaJS-style)
+
+VantaJS effects: Birds, Clouds, Fog, Waves, Net, Globe, Cells, Halo, Topology, Dots, Rings.
+
+| Effect Name | Visual Description | Remotion Equivalent | Settings |
+|-------------|-------------------|---------------------|---------|
+| **Birds (Flocking)** | Dozens of bird-like particles that flock together with realistic separation/cohesion | SVG ParticleField + boid rules (steer toward center, avoid crowding) | count=40, speed varies, color=accent1 |
+| **Waves** | Smooth animated ocean-like surface undulating | Animated SVG path with sin-displaced points: `y = baseline + A×sin(x/λ + t)` | 3-4 overlapping wave layers, opacity 0.2–0.4 |
+| **Net** | Connected node network with glowing edges | Existing `ParticleField` component (already implemented) | count=25–40, seed varies, intensity 0.5–0.8 |
+| **Fog** | Soft drifting cloud-like patches | Multiple `radial-gradient` divs drifting with sin-wave position | opacity 0.05–0.15, colors match bg |
+| **Globe** | 3D-ish rotating dot globe | SVG circle grid with perspective transform applied | Used in salesforlife.ai logo |
+| **Halo** | Concentric pulsing rings expanding outward | Array of divs with `scale(${0.9+sin(lf×0.07+i×1.4)×0.1})` | 3–5 rings, accent color, opacity 0.15–0.25 |
+| **Dots** | Grid of dots that wave/breathe | SVG dot grid with per-dot sin displacement | 10×6 grid, offset = sin(lf×0.03 + col×0.4 + row×0.6) |
+| **Topology** | Organic terrain-like undulating mesh | SVG path with noise-displaced points using seeded sin combinations | Heavy computation — use sparingly |
+
+### Category 4 — Micro-Interactions & Emphasis
+
+Small-scale animations that respond to audio beats or narrative moments.
+
+| Technique | Description | Remotion Implementation | Best For |
+|-----------|-------------|------------------------|----------|
+| **Gold Border Draw** | Animated stroke traces a glowing border around a card | SVG `rect` with `strokeDashoffset` animating 2200→0 over 150–180 frames | CTA quiz card, key insight cards |
+| **Single-Word Pulse** | One word in a sentence pulses (color/glow) for emphasis | `Math.abs(Math.cos(pulseLf×π/40))` for 2 gold→white cycles | "Listening", "YOU", "NOW", "SIGN" |
+| **Entrance Burst** | Element pops in with a radial glow spike that fades | `interpolate(lf, [0,6,24], [4.0,6.5,1.0])` on textShadow radius | SparkleGold words, key stats |
+| **Heartbeat Glow** | Sustained sine-wave glow on a static element | `0.5+0.5×Math.sin(frame×0.05)` multiplied on glow radius | CTA buttons, quiz cards, logo rings |
+| **Bouncing Arrow** | Arrow pointing to URL bounces up/down with gravity feel | `translateY(Math.sin(lf×0.12)×11)` | All CTA scenes |
+| **Pulsing Rings** | Concentric circles expanding and contracting | Array of 3 divs with scale and opacity driven by sin, phase-offset | CTA backgrounds, focus scenes |
+| **Label Entrance Flash** | Above-content label slams in with gold glow then settles | `Math.sin(pulseLf×π/45)` half-sine over 45 frames on textShadow | "THE POTENTIAL TO", "THE QUESTION:", section headers |
+
+### Category 5 — Kinetic Typography Styles
+
+| Style | Description | Remotion Implementation | Best For |
+|-------|-------------|------------------------|----------|
+| **Spring Word Build** | Words slam in with spring physics, staggered | `spring({frame:wf, fps, config:{damping:9, stiffness:115}})` per word | Archetype names, hook titles |
+| **Color Wave Text** | Each character cycles through a color palette using sin wave | `sin(lf×speed + charIdx×0.65)` → palette index | Section headers, CTA taglines |
+| **Kinetic Slam** | Text crashes in from off-screen with overshoot | `translateX(-200×(1-ent))` with low damping (8) + `scale(${1+(1-ent)×0.3})` | Single word reveals: "INVISIBLE", "SILENCE" |
+| **Marker Underline** | Accent line draws left-to-right beneath key text | SVG `line` or `rect` with `scaleX` 0→1 using spring | Key phrases, pull quotes |
+| **Fade-Up Cascade** | Lines of text fade+translate upward in sequence | `opacity×translateY(20→0)` with 15–20f stagger per line | Multi-line concept reveals |
+| **Typewriter + Word Pulse** | Char-by-char reveal, then ONE word pulses for emphasis | Typewriter (3f/char) → `|cos(pulseLf×π/40)|` for 2 cycles on key word | "Are You **Listening** For It?" |
+
+### Category 6 — Illustrative / Reveal Animations
+
+| Style | Description | Remotion Implementation | Best For |
+|-------|-------------|------------------------|----------|
+| **Draw-In Path (Trim Path)** | SVG stroke draws itself: `strokeDashoffset` from full → 0 | Animate `strokeDashoffset={perimeter*(1-progress)}` over 60–120f | Charts, arrows, connecting lines, borders |
+| **Whiteboard / Hand-Draw** | Elements "draw themselves" as if being written | `stroke-dashoffset` animation on SVG paths, matching audio pace | Concept diagrams, frameworks, lists |
+| **Isometric Build** | 3D isometric blocks stack up one at a time | CSS perspective + rotateX/rotateY, stagger entrance per block | Process steps, architecture diagrams |
+| **Counter Roll** | Numbers count up to final value in sync with audio | `Math.floor(progress × targetValue)` where progress = `lf/duration` | Stats, years of experience, dollar amounts |
+| **Chart Draw-In** | Bar/line chart fills in from left or bottom | `scaleX(0→1)` on bars, `strokeDashoffset` on lines | Data-driven scenes, comparison graphics |
+
+### Category 7 — Lusion/WebGL Inspiration (for SVG approximations in Remotion)
+
+Lusion Labs (akari.lusion.co) uses: jump flooding algorithm, 2D ray marching, real-time light tracing, vertex animations in Houdini FX, ThreeJS-powered WebGL scenes. These can be approximated in Remotion SVG:
+
+| Lusion Effect | Remotion SVG Approximation | Complexity |
+|---------------|---------------------------|------------|
+| **2D Light Tracing** | Radial gradient emanating from a point, animated origin | Low |
+| **Cloth Vertex Animation** | SVG path with multiple sin-wave displaced control points | Medium |
+| **Fluid/Liquid Distortion** | Animated SVG feTurbulence filter + feDisplacementMap | Medium |
+| **Particle Gravity** | ParticleField with attractor logic (dots drift toward center) | Medium |
+| **WebGL Ray March** | Nested radial gradients with animated hue rotation | Low (approximation only) |
+| **Jump Flood Algorithm** | Distance-field glow: `boxShadow` cascade from multiple points | Low |
+
+### Key Animation Principles (for all future videos)
+
+1. **Simplicity:** Avoid >3 simultaneous moving elements. One hero animation per scene.
+2. **Subtlety:** Background animations should enhance, not compete with content. Max opacity 0.25 for atmospheric effects.
+3. **Speed:** Transitions < 1 second (18–30 frames at 30fps). Entrance animations 15–25 frames.
+4. **Frame-Trigger Everything:** Every animation trigger = exact Whisper timestamp × 30fps. Zero estimates.
+5. **Layer Architecture:** Background (particles/glow) → Midground (cards/graphics) → Foreground (text/kinetic) → Overlay (NoiseOverlay grain).
+6. **Audio Sync:** In video, timing IS everything. An animation that's 0.5s early looks amateurish. Use Whisper.
+7. **Fade-In Zoom on B-Roll:** Never hard-cut B-roll. Use `scale(1.0→1.05)` slow zoom + opacity fade.
+
+---
+
 ## How to Use This Skill
 
 When designing or building any visual element:
