@@ -60,6 +60,17 @@ When Scott starts a new chat in this folder, greet him with the following prompt
 
 **⭐ FIRST DRAFT EXCELLENCE STANDARD:** Before writing any code for a new video, load and apply the **First Draft Excellence Checklist** in memory (`feedback_first_draft_excellence.md`). Every new video must score "A" on the first render — no defects that were already fixed in a prior video. The checklist covers: sizing, SVG font math, hook rotation, layout collision, CTA completeness, brand audit, render pipeline. This is MANDATORY.
 
+**💰 POST-VIDEO ROI AUDIT (MANDATORY — run after every `-final.mp4` is delivered):**
+After delivering any final video, immediately run the ROI audit from `memory/project_roi_audit.md`:
+1. Count actual renders vs. optimal (1–2)
+2. Calculate extra time: (extra renders × 10 min) + (extra fix sessions × 45 min) + (extra review rounds × 15 min)
+3. Calculate dollar value: total hours × $300 (Scott's rate) + token cost
+4. List new rules born from this video → estimate lifetime value
+5. Update cumulative savings total in `project_roi_audit.md`
+6. Report the summary to Scott: *"This video's rework cost: $X. Cumulative savings from checklist: $Y. Next video projected savings: $Z."*
+
+**Why mandatory:** The audit closes the learning loop and makes the ROI of the documentation system visible. It also holds both of us accountable to the "1 render = final" standard.
+
 **What would you like to work on today?**
 - **Create a new video** (concept → script → voiceover → animated MP4 + branded intro/outro)
 - Upgrade the composition templates (new scene types, visual styles)
