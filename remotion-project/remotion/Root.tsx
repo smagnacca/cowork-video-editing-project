@@ -30,7 +30,7 @@ const IntroComposition: React.FC = () => (
       speakerName: 'Scott Magnacca',
       speakerTitle: 'AI & Leadership Strategist',
       accentColor: 'accent1',
-      timing: { startFrame: 0, endFrame: 728 },
+      timing: { startFrame: 0, endFrame: 690 },
     }}
     colors={COLORS}
     effects={EFFECTS}
@@ -124,10 +124,32 @@ const InvisibleSignIntroComposition: React.FC = () => (
       speakerName: 'Scott Magnacca',
       speakerTitle: 'AI & Storyselling Strategist',
       accentColor: 'accent1',
-      timing: { startFrame: 0, endFrame: 728 },
+      timing: { startFrame: 0, endFrame: 690 },
     }}
     colors={SS_COLORS}
     effects={SS_EFFECTS}
+  />
+);
+
+// ─── Generic Outro (reusable across all videos — no topic-specific kinetic text) ─
+const GenericOutroComposition: React.FC = () => (
+  <OutroScene
+    scene={{
+      type: 'outro',
+      avatarSrc: 'avatar/outro-avatar.mp4',
+      ctaHeadline: 'Want to Go Deeper?',
+      ctaDescription: 'Scan the QR code or visit the URL below to take the quiz and learn more',
+      ctaButtonText: 'LEARN MORE',
+      accentColor: 'accent2',
+      kineticText: '',
+      kineticColor: 'accent1',
+      speakerName: 'Scott Magnacca',
+      timing: { startFrame: 0, endFrame: 643 },
+    }}
+    colors={COLORS}
+    effects={EFFECTS}
+    ctaUrl="scottmagnacca.com"
+    ctaTagline="Build the skills that make you impossible to ignore"
   />
 );
 
@@ -146,11 +168,11 @@ const defaultTemplateConfig = {
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* Standalone intro (24.28s = 728 frames) */}
+      {/* Standalone intro (23.0s = 690 frames — trimmed before topic reveal) */}
       <Composition
         id="IntroSceneComp"
         component={IntroComposition}
-        durationInFrames={728}
+        durationInFrames={690}
         fps={30}
         width={1920}
         height={1080}
@@ -247,7 +269,17 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="InvisibleSignIntroComp"
         component={InvisibleSignIntroComposition}
-        durationInFrames={728}
+        durationInFrames={690}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+
+      {/* Generic reusable outro — no topic-specific kinetic text or CTA */}
+      <Composition
+        id="GenericOutroSceneComp"
+        component={GenericOutroComposition}
+        durationInFrames={643}
         fps={30}
         width={1920}
         height={1080}

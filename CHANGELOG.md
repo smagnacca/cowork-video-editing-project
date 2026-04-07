@@ -2,6 +2,29 @@
 
 ---
 
+## 2026-04-07 — New Intro/Outro Assets (Invisible Sign)
+
+**Output:**
+- `assets/New Intro-2026-04-07.mp4` (6.2MB, 23s, 1920x1080, 30fps)
+- `assets/New Outro-2026-04-07.mp4` (3.3MB, 17.8s, 1920x1080, 30fps)
+
+### Intro Fix
+- **Removed "Traditional: 25 years" green text label** from the learning curve chart in `IntroScene.tsx`
+  - Dashed orange line, gold sparkle exponential curve, and all other chart animations preserved
+  - Fix was in source (deleted `<text>` element at line 130-131), then re-rendered `InvisibleSignIntroComp`
+  - Previous approach attempted ffmpeg drawbox paint-over — abandoned in favor of clean Remotion re-render
+- **Fade to black** from 23.0s to end of clip (natural composition end at 23.06s)
+- **Avatar speech preserved** — completes naturally at ~22.67s before fade
+- **No black opening frame** — re-encoded with `-movflags +faststart`
+
+### Outro
+- `assets/New Outro-2026-04-07.mp4` — trimmed/processed outro for Invisible Sign video
+
+### Source Change
+- `remotion-project/src/components/IntroScene.tsx` — removed `<text>` element "Traditional: 25 years" (line 130-131)
+
+---
+
 ## [Storyselling v8] 2026-04-01 — New Outro Video (Scott_outro_4.1.26) + All Fixes
 
 **Output:** `output/storyselling-ai-v8-final.mp4` (28MB, 3:14)

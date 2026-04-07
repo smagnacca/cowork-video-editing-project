@@ -127,8 +127,6 @@ const LearningCurve: React.FC<{
           fill="none" stroke={orange} strokeWidth="2.5"
           strokeDasharray="8 5" opacity={0.7}
         />
-        <text x="240" y="228" fill={orange} fontSize="15" textAnchor="middle"
-          fontFamily="sans-serif" fontWeight="700" opacity={0.9}>Traditional: 25 years</text>
 
         {/* Exponential curve — gold sparkle */}
         <path
