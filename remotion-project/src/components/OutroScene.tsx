@@ -59,7 +59,7 @@ const GoldWordBuild: React.FC<{
   const { fps } = useVideoConfig();
   return (
     <div style={{
-      display: 'flex', flexWrap: 'wrap', gap: '10px 14px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
       justifyContent: 'center', maxWidth: 740,
     }}>
       {words.map((word, i) => {
@@ -279,8 +279,8 @@ export const OutroScene: React.FC<{
   // f28–f275: "several powerful ideas" → gold word build (words at f30/f47/f64)
   // f103–f295: "radically shift your productivity..." → sprint B-roll
   // f280–end: "If this resonated / click link or QR / take the quiz / let's continue" → quiz card
-  const opKinetic = phaseOpacity(frame, 0, 95, 20);
-  const opGold    = phaseOpacity(frame, 28, 275, 18);
+  const opKinetic = phaseOpacity(frame, 0, 55, 18);
+  const opGold    = phaseOpacity(frame, 70, 275, 18);
   const opSprint  = phaseOpacity(frame, 103, 295, 22);
   const opQuiz    = phaseOpacity(frame, 280, sceneDuration, 22);
 

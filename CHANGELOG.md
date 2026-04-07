@@ -2,6 +2,33 @@
 
 ---
 
+## 2026-04-07 — Invisible Sign v7 Final (Clean Splice + Outro Layout Fix)
+
+**Output:** `output/invisible-sign-v7-final.mp4` (190s / 3:10, 1920x1080, 30fps)
+
+### Root Cause — Double Intro/Outro in v6
+`invisible-sign-v5-final.mp4` had its OWN intro (0–24.5s) and outro (170s–197.8s) baked in from a previous Remotion render. The v6 splice naively concatenated the full file between the new intro and outro, creating a double intro and double outro.
+
+### Fix — FFmpeg Trim
+- Content trimmed with `ss=24.5` (skips baked-in intro) and `to=170.0` (cuts before baked-in outro)
+- Trim points verified via frame extraction: 24.5s = "EVERY CLIENT WEARS AN INVISIBLE SIGN" hook (real content start), 170.0s = transition frame (baked-in CTA starting)
+- Result: 145.5s of pure content, no duplicate intro/outro segments
+
+### OutroScene.tsx — Two Layout Fixes
+1. **Phase overlap fixed:** Kinetic text ("THREE IDEAS. ONE EDGE.") and gold word build ("SEVERAL / POWERFUL / IDEAS") were rendering simultaneously from frame 28–95. Fixed by separating phases: kinetic text f0–f55, gold words f70–f275 (clean sequential handoff with brief gap).
+2. **Gold word collision fixed:** `GoldWordBuild` component used `flexWrap: 'wrap'` with `gap: '10px 14px'` — at fontSize 68, the three words collapsed into one line with no visible gap ("SEVERALPOWERFUL"). Changed to `flexDirection: 'column'` so each word stacks vertically with proper spacing.
+
+### GenericOutroComposition Props (Root.tsx)
+- `kineticText`: `""` → `"THREE IDEAS. ONE EDGE."`
+- `ctaHeadline`: `"Want to Go Deeper?"` → `"Take the 60-Second AI Quiz"`
+- `ctaDescription`: updated to "Discover how AI will impact your career in the next 12 months"
+- `ctaButtonText`: `"LEARN MORE"` → `"START THE QUIZ →"`
+
+### Cleanup
+- Deleted `assets/intro-outro/` subfolder (old renders from March, superseded by `assets/New Intro-2026-04-07.mp4` and `assets/New Outro-2026-04-07.mp4`)
+
+---
+
 ## 2026-04-07 — New Intro/Outro Assets (Invisible Sign)
 
 **Output:**
