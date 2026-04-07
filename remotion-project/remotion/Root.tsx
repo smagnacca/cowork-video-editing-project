@@ -131,17 +131,17 @@ const InvisibleSignIntroComposition: React.FC = () => (
   />
 );
 
-// ─── Generic Outro (reusable across all videos — no topic-specific kinetic text) ─
+// ─── Generic Outro (reusable across all videos) ─────────────────────────────
 const GenericOutroComposition: React.FC = () => (
   <OutroScene
     scene={{
       type: 'outro',
       avatarSrc: 'avatar/outro-avatar.mp4',
-      ctaHeadline: 'Want to Go Deeper?',
-      ctaDescription: 'Scan the QR code or visit the URL below to take the quiz and learn more',
-      ctaButtonText: 'LEARN MORE',
+      ctaHeadline: 'Take the 60-Second AI Quiz',
+      ctaDescription: 'Discover how AI will impact your career in the next 12 months',
+      ctaButtonText: 'START THE QUIZ →',
       accentColor: 'accent2',
-      kineticText: '',
+      kineticText: 'THREE IDEAS. ONE EDGE.',
       kineticColor: 'accent1',
       speakerName: 'Scott Magnacca',
       timing: { startFrame: 0, endFrame: 643 },
