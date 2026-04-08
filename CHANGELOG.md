@@ -2,6 +2,63 @@
 
 ---
 
+## 2026-04-07 — 3-Types Audio Re-sync (Claude Code)
+
+**Output:** `output/3-types-of-people-synced.mp4` (199s / 5970 frames, content-only render)
+
+### What was done
+- `audio/3-types-of-people.mp3` regenerated with Edge TTS `en-US-AndrewMultilingualNeural` (+12% rate, -2Hz pitch). All text assertions passed.
+- Whisper word-level timestamps verified. Scene boundaries confirmed exact:
+  - "Number one" → 16.24s = frame 487 (Believer)
+  - "Number two" → 60.76s = frame 1822 (Peer)
+  - "Number three" → 110.20s = frame 3306 (Coach)
+  - "These three types" → 149.92s = frame 4497 (Bridge)
+  - "Your circle is your catalyst" → 182.68s = frame 5480 (CTA)
+- Scene timing constants in `ThreeTypesVideo.tsx` updated (1–3 frame micro-adjustments)
+- Kinetic text delays: Believer=1068, Peer=1187, Coach=953 (set to 80% through each scene)
+- B-roll start frames adjusted: Peer clips 260→272, 677→714
+- Pull quote delays recalculated to new Whisper timestamps
+- Frame-verified: correct card on screen at each narrator cue
+
+### What remains (content fixes — pending next Claude Code session)
+See `CLAUDE-CODE-PROMPT.md` for 8 fixes across both videos (black screen, gold text, audio garble, CTA card, side-by-side, crossfade). Final deliverables: `3-types-of-people-4.7.26-v2-final.mp4` and `storyselling-ai-4.7.26-v2-final.mp4`.
+
+---
+
+## 2026-04-07 — Edit Pass 2 Review + Design Documentation
+
+### Videos Prepared for Edit Pass 2
+- `output/3-types-of-people-4.7.26-final.mp4` — 3:47, 42MB, 1920×1080
+- `output/storyselling-ai-4.7.26-final.mp4` — 2:51, 25MB, 1920×1080
+
+Both spliced using the new reusable intro (`assets/New Intro-2026-04-07.mp4`) and outro (`assets/New Outro-2026-04-07.mp4`) via ffmpeg filter_complex concat (3-segment: intro + trimmed content + outro).
+
+**Trim points identified by frame inspection:**
+- 3-types: `ss=0 to=182.5` (no baked-in intro; old scottmagnacca.com CTA cut at 183s)
+- storyselling: `ss=23.5 to=150.0` (HeyGen intro trimmed; old CTA cut at 152s)
+
+### Fixes Identified (queued for Claude Code pass 2 — see CLAUDE-CODE-PROMPT.md)
+1. **3-types t=23–29**: Black screen after intro splice — composition fade-in too slow. Fix: add narration-synced text overlays to SceneHook (3 timed overlays: background animation + "In a world…" + cyan/gold text pair).
+2. **3-types t=3:26**: "THREE IDEAS. ONE EDGE." kinetic text in GenericOutroComposition — config drift from Invisible Sign video. Fix: set `kineticText: ''` in Root.tsx.
+3. **3-types t=3:35**: CTA card off-screen left + oversized. Fix: center with `left: 50% / translateX(-50%)`, reduce to max 700px width.
+4. **Storyselling t=31**: "second" / "month" in dark green (#005A3B) — near invisible on black. Fix: change to gold `#f5a623`.
+5. **Storyselling t=41**: "Your career is on borrowed time" in grey — no emphasis. Fix: gold + single pulse animation.
+6. **Storyselling t=44–50**: Side-by-side left panel repeats prior content. Fix: replace with "It already has." (gold) + TypewriterText "The real question is…"
+7. **Storyselling t=1:18**: Audio garble — "No jargon" (banned TTS word) → "hargonne". Fix: verify storyselling-ai-fixed.mp3 and update composition to use it; re-verify scene timing constants.
+8. **Storyselling t=2:28**: Abrupt scene cut. Fix: add 30-frame crossfade at composition frame ~3135.
+
+### concat demuxer bug documented
+Using `-f concat -safe 0` demuxer caused timestamp drift → 1331s and 1002s output durations. Fixed by switching to `filter_complex` concat (correct output: 227s and 171s).
+
+### Documentation Written
+- `CLAUDE-CODE-PROMPT.md` — full precision pickup prompt with exact frame numbers, component locations, code samples for all 8 fixes
+- `VIDEO-DESIGN-SPEC.md` — master design specification covering colors, typography, animations, layout, audio, render/splice protocol, and file naming (cross-project applicable)
+- Memory: `feedback_video_production_lessons.md` — 7 production rules from this session
+- Memory: `feedback_audio_tts_rules.md` — complete TTS protocol, banned words, verification steps
+- Memory: `feedback_remotion_render_splice.md` — render environment, splice protocol, CSS restrictions, verification checklist
+
+---
+
 ## 2026-04-07 — Invisible Sign v7 Final (Clean Splice + Outro Layout Fix)
 
 **Output:** `output/invisible-sign-v7-final.mp4` (190s / 3:10, 1920x1080, 30fps)

@@ -158,8 +158,7 @@ const QuizCard: React.FC<{
   return (
     <div style={{
       opacity: opacity * ent,
-      // 175% bigger: scale(1.75) — overflows left panel into avatar area for dramatic CTA
-      transform: `translateY(${interpolate(ent, [0, 1], [30, 0])}px) scale(1.75)`,
+      transform: `translateY(${interpolate(ent, [0, 1], [30, 0])}px) scale(0.85)`,
       transformOrigin: 'center center',
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
     }}>

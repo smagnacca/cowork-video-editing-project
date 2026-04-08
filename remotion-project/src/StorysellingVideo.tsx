@@ -250,7 +250,7 @@ const HookLeftPanel: React.FC = () => {
             transform: `translateY(${interpolate(quoteIn, [0, 1], [30, 0])}px)`,
             textShadow: `0 2px 30px rgba(0,0,0,0.6)`,
           }}>
-            AI can now process more data in a <span style={{ color: BRAND.green }}>second</span> than you can in a <span style={{ color: BRAND.green }}>month.</span>
+            AI can now process more data in a <span style={{ color: '#f5a623', textShadow: '0 0 20px #f5a62360' }}>second</span> than you can in a <span style={{ color: '#f5a623', textShadow: '0 0 20px #f5a62360' }}>month.</span>
           </p>
           <div style={{
             width: 80, height: 3, backgroundColor: BRAND.green, marginTop: 32,
@@ -299,16 +299,25 @@ const HookLeftPanel: React.FC = () => {
             }}>spreadsheet</span>...
           </h2>
           <p style={{
-            fontSize: 38, fontWeight: 500, color: BRAND.textSecondary, textAlign: 'center',
-            fontFamily: '-apple-system, sans-serif', marginTop: 28,
+            fontSize: 38, fontWeight: 700,
+            color: '#f5a623',
+            textShadow: '0 0 20px #f5a62380, 0 0 50px #f5a62340',
+            textAlign: 'center',
+            fontFamily: '-apple-system, sans-serif',
+            marginTop: 28,
             opacity: spring({ frame: Math.max(0, frame - 430), fps, config: { damping: 16, stiffness: 70 } }),
+            transform: `scale(${1 + (
+              frame > 430 && frame < 470
+                ? Math.sin(((frame - 430) / 40) * Math.PI) * 0.06
+                : 0
+            )})`,
           }}>
             Your career is on borrowed time.
           </p>
         </div>
       )}
 
-      {/* ── Segment 4: Title card (20.7–29.7s) ── */}
+      {/* ── Segment 4: "It already has." + "The real question is..." (20.7–29.7s) ── */}
       {showTitle && (
         <div style={{
           position: 'absolute', inset: 0,
@@ -318,41 +327,70 @@ const HookLeftPanel: React.FC = () => {
           opacity: seg(620, 890),
         }}>
           <ParticleField color={BRAND.green} count={30} seed={7} intensity={0.5} />
-          <div style={{
-            opacity: titleIn,
-            transform: `translateY(${interpolate(titleIn, [0, 1], [40, 0])}px)`,
-            textAlign: 'center', zIndex: 10,
-          }}>
-            <h1 style={{
-              fontSize: 88, fontWeight: 900, color: BRAND.white, margin: 0,
-              fontFamily: '-apple-system, sans-serif', lineHeight: 1.1, letterSpacing: -3,
-              textShadow: `0 0 40px rgba(255,255,255,0.1)`,
+
+          {/* "It already has." — Whisper: 22.94s = frame 688, hold until ~720 */}
+          {frame >= 680 && frame <= 760 && (
+            <p style={{
+              fontSize: 88, fontWeight: 900, color: '#f5a623',
+              textShadow: '0 0 30px #f5a62380, 0 0 80px #f5a62340',
+              textAlign: 'center', lineHeight: 1.1, zIndex: 10,
+              opacity: interpolate(frame, [680, 700, 740, 760], [0, 1, 1, 0],
+                { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+              transform: `scale(${interpolate(spring({ frame: Math.max(0, frame - 680), fps,
+                config: { damping: 14, stiffness: 90 } }), [0, 1], [0.8, 1])})`,
             }}>
-              STORY<span style={{ color: BRAND.green }}>SELLING</span>
-            </h1>
-            <h2 style={{
-              fontSize: 38, fontWeight: 300, color: BRAND.white, margin: '12px 0 0',
-              fontFamily: '-apple-system, sans-serif', letterSpacing: 6, textTransform: 'uppercase',
+              It already has.
+            </p>
+          )}
+
+          {/* "The real question is..." — Whisper: 24.22s = frame 726, typewriter reveal */}
+          {frame >= 726 && (
+            <div style={{ zIndex: 10 }}>
+              <TypewriterText
+                text="The real question is..."
+                color="#f5a623"
+                fontSize={52}
+                delay={726}
+              />
+            </div>
+          )}
+
+          {/* Title card fades in after text reveals */}
+          {frame >= 790 && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', padding: '0 60px',
+              opacity: interpolate(frame, [790, 820], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+              zIndex: 11,
             }}>
-              in the Age of <span style={{
-                color: BRAND.green,
-                textShadow: `0 0 15px ${BRAND.greenGlow}`,
-              }}>AI</span>
-            </h2>
-          </div>
-          <p style={{
-            fontSize: 26, color: BRAND.textSecondary, textAlign: 'center',
-            fontFamily: '-apple-system, sans-serif',
-            opacity: subtitleIn, marginTop: 36, letterSpacing: 3,
-            textTransform: 'uppercase',
-          }}>
-            Connection Over Computation
-          </p>
-          <div style={{
-            width: 140, height: 4, backgroundColor: BRAND.green, marginTop: 24,
-            opacity: subtitleIn, borderRadius: 2,
-            boxShadow: `0 0 25px ${BRAND.greenGlow}`,
-          }} />
+              <div style={{ textAlign: 'center' }}>
+                <h1 style={{
+                  fontSize: 88, fontWeight: 900, color: BRAND.white, margin: 0,
+                  fontFamily: '-apple-system, sans-serif', lineHeight: 1.1, letterSpacing: -3,
+                  textShadow: '0 0 40px rgba(255,255,255,0.1)',
+                }}>
+                  STORY<span style={{ color: BRAND.green }}>SELLING</span>
+                </h1>
+                <h2 style={{
+                  fontSize: 38, fontWeight: 300, color: BRAND.white, margin: '12px 0 0',
+                  fontFamily: '-apple-system, sans-serif', letterSpacing: 6, textTransform: 'uppercase',
+                }}>
+                  in the Age of <span style={{
+                    color: BRAND.green,
+                    textShadow: `0 0 15px ${BRAND.greenGlow}`,
+                  }}>AI</span>
+                </h2>
+              </div>
+              <p style={{
+                fontSize: 26, color: BRAND.textSecondary, textAlign: 'center',
+                fontFamily: '-apple-system, sans-serif',
+                marginTop: 36, letterSpacing: 3, textTransform: 'uppercase',
+              }}>
+                Connection Over Computation
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -948,9 +986,15 @@ const ApplicationScene: React.FC = () => {
   const cardX = interpolate(brollShift, [0, 1], [0, -340]);
   const cardScale = interpolate(brollShift, [0, 1], [1, 0.85]);
 
-  // Phase detection
-  const isFrameworkPhase = frame < 660;
-  const isCopilotPhase = frame >= 660;
+  // Phase detection with crossfade transition (30 frames = 1s)
+  const PHASE_TRANSITION = 660;
+  const PHASE_FADE = 30;
+  const isFrameworkPhase = frame < PHASE_TRANSITION + PHASE_FADE;
+  const isCopilotPhase = frame >= PHASE_TRANSITION - PHASE_FADE;
+  const frameworkOpacity = frame < PHASE_TRANSITION ? 1 :
+    interpolate(frame, [PHASE_TRANSITION, PHASE_TRANSITION + PHASE_FADE], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const copilotOpacity = frame < PHASE_TRANSITION ? 0 :
+    interpolate(frame, [PHASE_TRANSITION, PHASE_TRANSITION + PHASE_FADE], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
   return (
     <AbsoluteFill style={{ backgroundColor: BRAND.black }}>
@@ -976,8 +1020,12 @@ const ApplicationScene: React.FC = () => {
         The Framework
       </div>
 
-      {/* Winter-to-Spring landscape graphic */}
-      {isFrameworkPhase && <WinterSpringLandscape delay={20} />}
+      {/* Winter-to-Spring landscape graphic — fades out with crossfade */}
+      {frameworkOpacity > 0 && (
+        <div style={{ opacity: frameworkOpacity }}>
+          <WinterSpringLandscape delay={20} />
+        </div>
+      )}
 
       {/* Main content card — positioned below landscape when framework is showing */}
       <AbsoluteFill style={{
@@ -1005,26 +1053,42 @@ const ApplicationScene: React.FC = () => {
               </svg>
             </div>
 
-            <h2 style={{
-              color: BRAND.white, fontSize: 84, fontWeight: 900, margin: 0, textAlign: 'center',
-              fontFamily: '-apple-system, sans-serif', letterSpacing: -2,
-            }}>
-              {isFrameworkPhase ? (
-                <>Winter to <span style={{ color: BRAND.green, textShadow: `0 0 25px ${BRAND.greenGlow}` }}>Spring</span></>
-              ) : (
-                <>AI: Your <span style={{ color: BRAND.green, textShadow: `0 0 25px ${BRAND.greenGlow}` }}>Co-Pilot</span></>
-              )}
-            </h2>
-
-            <p style={{
-              color: BRAND.textSecondary, fontSize: 36,
-              fontFamily: '-apple-system, sans-serif',
-              textAlign: 'center', marginTop: 20, lineHeight: 1.5, maxWidth: 900,
-            }}>
-              {isFrameworkPhase
-                ? 'Build a bridge of stories — from fear to freedom, from Winter to Spring.'
-                : 'Generate metaphors. Rehearse conversations. Find the story inside the data.'}
-            </p>
+            {/* Framework phase title — fades out during crossfade */}
+            {frameworkOpacity > 0 && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: frameworkOpacity }}>
+                <h2 style={{
+                  color: BRAND.white, fontSize: 84, fontWeight: 900, margin: 0, textAlign: 'center',
+                  fontFamily: '-apple-system, sans-serif', letterSpacing: -2,
+                }}>
+                  Winter to <span style={{ color: BRAND.green, textShadow: `0 0 25px ${BRAND.greenGlow}` }}>Spring</span>
+                </h2>
+                <p style={{
+                  color: BRAND.textSecondary, fontSize: 36,
+                  fontFamily: '-apple-system, sans-serif',
+                  textAlign: 'center', marginTop: 20, lineHeight: 1.5, maxWidth: 900,
+                }}>
+                  Build a bridge of stories — from fear to freedom, from Winter to Spring.
+                </p>
+              </div>
+            )}
+            {/* Co-pilot phase title — fades in during crossfade */}
+            {copilotOpacity > 0 && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: copilotOpacity }}>
+                <h2 style={{
+                  color: BRAND.white, fontSize: 84, fontWeight: 900, margin: 0, textAlign: 'center',
+                  fontFamily: '-apple-system, sans-serif', letterSpacing: -2,
+                }}>
+                  AI: Your <span style={{ color: BRAND.green, textShadow: `0 0 25px ${BRAND.greenGlow}` }}>Co-Pilot</span>
+                </h2>
+                <p style={{
+                  color: BRAND.textSecondary, fontSize: 36,
+                  fontFamily: '-apple-system, sans-serif',
+                  textAlign: 'center', marginTop: 20, lineHeight: 1.5, maxWidth: 900,
+                }}>
+                  Generate metaphors. Rehearse conversations. Find the story inside the data.
+                </p>
+              </div>
+            )}
           </div>
         </GlassmorphismCard>
       </AbsoluteFill>

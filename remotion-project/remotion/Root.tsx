@@ -141,7 +141,7 @@ const GenericOutroComposition: React.FC = () => (
       ctaDescription: 'Discover how AI will impact your career in the next 12 months',
       ctaButtonText: 'START THE QUIZ →',
       accentColor: 'accent2',
-      kineticText: 'THREE IDEAS. ONE EDGE.',
+      kineticText: '',
       kineticColor: 'accent1',
       speakerName: 'Scott Magnacca',
       timing: { startFrame: 0, endFrame: 643 },
@@ -192,7 +192,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="ThreeTypesVideo"
         component={ThreeTypesVideo}
-        durationInFrames={5971}
+        durationInFrames={5970}
         fps={30}
         width={1920}
         height={1080}

@@ -32,15 +32,15 @@ const COLORS = {
 const SCENE_1_START = 0;
 const SCENE_1_END = 487;       // 16.24s — "Number one" starts (Believer)
 const SCENE_2_START = 487;
-const SCENE_2_END = 1823;      // 60.76s — "Number two" starts (Peer)
-const SCENE_3_START = 1823;
+const SCENE_2_END = 1822;      // 60.76s — "Number two" starts (Peer)
+const SCENE_3_START = 1822;
 const SCENE_3_END = 3306;      // 110.20s — "Number three" starts (Coach)
 const SCENE_4_START = 3306;
-const SCENE_4_END = 4498;      // 149.92s — "These three types" starts (Bridge)
-const SCENE_5_START = 4498;
-const SCENE_5_END = 5483;      // 182.76s — "Your circle is your catalyst" starts (CTA)
-const SCENE_6_START = 5483;
-const SCENE_6_END = 5971;      // CTA holds 5s past audio end (~194s = 5821 frames)
+const SCENE_4_END = 4497;      // 149.92s — "These three types" starts (Bridge)
+const SCENE_5_START = 4497;
+const SCENE_5_END = 5480;      // 182.68s — "Your circle is your catalyst" starts (CTA)
+const SCENE_6_START = 5480;
+const SCENE_6_END = 5970;      // CTA holds 5s past audio end (~194s = 5820 frames)
 
 // ─── Animated Background ─────────────────────────────────────────
 const AnimatedBackground: React.FC<{
@@ -423,16 +423,58 @@ const PulsingFrame: React.FC<{
 const SceneHook: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const titleEntrance = spring({ frame: Math.max(0, frame - 30), fps, config: { damping: 18, stiffness: 60 } });
-  const subtitleEntrance = spring({ frame: Math.max(0, frame - 90), fps, config: { damping: 18, stiffness: 60 } });
+  // Delay title/subtitle entrance until frame 240 to avoid overlapping text overlays
+  const titleEntrance = spring({ frame: Math.max(0, frame - 240), fps, config: { damping: 18, stiffness: 60 } });
+  const subtitleEntrance = spring({ frame: Math.max(0, frame - 280), fps, config: { damping: 18, stiffness: 60 } });
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg }}>
       <AnimatedBackground color1={COLORS.cyan} color2="#1a0a2e" color3={COLORS.bg} speed={0.5} />
-      <ParticleField color={COLORS.cyan} count={50} seed={1} intensity={0.8} />
+      <ParticleField color={COLORS.cyan} count={50} seed={1} intensity={1.5} />
 
-      {/* Pulsing gold/white rectangle frame around title */}
-      <PulsingFrame delay={45} width={1050} height={260} />
+      {/* Overlay B — "In a world that's changing faster than ever" (frames 15–150) */}
+      {frame >= 15 && frame <= 150 && (
+        <AbsoluteFill style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+          <p style={{
+            fontSize: 48, fontWeight: 600, color: '#ffffff',
+            fontFamily: '-apple-system, sans-serif',
+            textAlign: 'center', letterSpacing: 2, textTransform: 'uppercase',
+            opacity: interpolate(frame, [15, 45, 120, 150], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+            textShadow: '0 0 40px rgba(255,255,255,0.25)',
+            padding: '0 120px',
+          }}>
+            In a world that's changing faster than ever
+          </p>
+        </AbsoluteFill>
+      )}
+
+      {/* Overlay C — "The most dangerous thing you can do" + "is stay the same." (frames 120–270) */}
+      {frame >= 120 && frame <= 270 && (
+        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24, zIndex: 10 }}>
+          <p style={{
+            fontSize: 60, fontWeight: 800, color: COLORS.cyan,
+            fontFamily: '-apple-system, sans-serif', textAlign: 'center',
+            opacity: interpolate(frame, [120, 150, 195, 220], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+            textShadow: `0 0 30px ${COLORS.cyan}80`,
+            letterSpacing: -1, padding: '0 100px',
+          }}>
+            The most dangerous thing you can do
+          </p>
+          <p style={{
+            fontSize: 76, fontWeight: 900, color: '#f5a623',
+            fontFamily: '-apple-system, sans-serif', textAlign: 'center',
+            opacity: interpolate(frame, [195, 225], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+            transform: `scale(${interpolate(spring({ frame: Math.max(0, frame - 195), fps, config: { damping: 14, stiffness: 100 } }), [0, 1], [0.85, 1])})`,
+            textShadow: '0 0 20px #f5a62380, 0 0 60px #f5a62340',
+            letterSpacing: -1,
+          }}>
+            is stay the same.
+          </p>
+        </AbsoluteFill>
+      )}
+
+      {/* Pulsing gold/white rectangle frame around title — delayed to match title entrance */}
+      <PulsingFrame delay={250} width={1050} height={260} />
 
       <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <h1
@@ -471,7 +513,7 @@ const SceneHook: React.FC = () => {
         </p>
       </AbsoluteFill>
 
-      <KineticText text="CURIOSITY IS YOUR EDGE" color={COLORS.gold} delay={240} duration={140} shimmer glow />
+      <KineticText text="CURIOSITY IS YOUR EDGE" color={COLORS.gold} delay={340} duration={140} shimmer glow />
     </AbsoluteFill>
   );
 };
@@ -715,7 +757,7 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
           bgColor2="#0a1a3a"
           bgColor3={COLORS.bg}
           kineticText="SHARE YOUR GOALS"
-          kineticDelay={1013}
+          kineticDelay={1068}
           brollSrc="bet-on-you.mp4"
           brollStartFrame={378}
           brollDuration={120}
@@ -727,7 +769,7 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
         />
         {/* Pull quotes — key phrases featured as italic quotes */}
         <PullQuote text="They bet on you early" color={COLORS.cyan} delay={378} duration={100} />
-        <PullQuote text="Your potential only compounds when you do" color={COLORS.cyan} delay={1256} duration={100} />
+        <PullQuote text="Your potential only compounds when you do" color={COLORS.cyan} delay={1283} duration={100} />
       </Sequence>
 
       {/* Scene 3: The Peer — multiple B-roll clips at narration cue points */}
@@ -742,18 +784,18 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
           bgColor2="#2a1a4a"
           bgColor3={COLORS.bg}
           kineticText="PROXIMITY IS THE PROGRAM"
-          kineticDelay={805}
+          kineticDelay={1187}
           brollSrc="teamwork.mp4"
-          brollStartFrame={260}
+          brollStartFrame={272}
           brollDuration={150}
           brollClips={[
-            { src: 'teamwork.mp4', startFrame: 260, duration: 150 },      // "keep building" (69.42s)
-            { src: 'conference.mp4', startFrame: 677, duration: 150 },    // "masterminds, communities" (84.06s)
+            { src: 'teamwork.mp4', startFrame: 272, duration: 150 },      // "keep building" (69.82s)
+            { src: 'conference.mp4', startFrame: 714, duration: 150 },    // "masterminds, communities" (84.54s)
             { src: 'coding.mp4', startFrame: 1162, duration: 150 },       // "building real AI skills" (99.48s)
           ]}
         />
-        <PullQuote text="Proximity is the program" color={COLORS.gold} delay={805} duration={100} />
-        <PullQuote text="That gap is widening every single day" color={COLORS.gold} delay={1424} duration={100} />
+        <PullQuote text="Proximity is the program" color={COLORS.gold} delay={806} duration={100} />
+        <PullQuote text="That gap is widening every single day" color={COLORS.gold} delay={1420} duration={100} />
       </Sequence>
 
       {/* Scene 4: The Coach — multiple B-roll clips at narration cue points */}
@@ -768,7 +810,7 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
           bgColor2="#1a0a1a"
           bgColor3="#050810"
           kineticText="FILTER FOR TRUTH"
-          kineticDelay={325}
+          kineticDelay={953}
           brollSrc="laptop.mp4"
           brollStartFrame={560}
           brollDuration={150}
@@ -777,7 +819,7 @@ export const ThreeTypesVideo: React.FC<{ audioSrc?: string }> = ({
             { src: 'reading.mp4', startFrame: 1066, duration: 150 },      // "lifelong learners" (145.74s)
           ]}
         />
-        <PullQuote text="They'll give you a mirror" color={COLORS.orange} delay={514} duration={100} />
+        <PullQuote text="They'll give you a mirror" color={COLORS.orange} delay={548} duration={100} />
         <PullQuote text="They're endlessly curious — they're lifelong learners" color={COLORS.orange} delay={1021} duration={120} />
       </Sequence>
 
